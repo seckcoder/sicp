@@ -1,12 +1,10 @@
 #lang racket
+(require "base.rkt")
 
 ;; 1.2
 (define result (/ (+ 5 1/2 (- 2 3 (+ 6 1/3))) (* 3 (- 6 2) (- 2 7))))
 
 ;; 1.3
-
-(define (square a)
-  (* a a))
 
 (define (square-larger a b c)
   (cond ((and (>= a b c) (>= b a c) (+ (square a) (square b))))
@@ -61,5 +59,21 @@
   (> 0.001
      (/ (abs (- new-guess guess))
         guess)))
+#|(sqrt 0.00001)|#
+;; this will lead to endless loop
+;;(mysqrt 0.00001)
+;(my-new-sqrt 0.00001)
+
+;(sqrt 900000000000000000000000000000000000000000000000000000000000000000000000000000000000)
+;;(mysqrt 900000000000000000000000000000000000000000000000000000000000000000000000000000000000)
+#|(my-new-sqrt 900000000000000000000000000000000000000000000000000000000000000000000000000000000000)|#
+
+;; 1.8
+
+(require "newton.rkt")
+(define (cubic-root x)
+  (newtons-method (lambda (y) (- (cube x)
+                                 x))
+                  1.0))
 
 (provide (all-defined-out))
