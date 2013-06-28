@@ -1,5 +1,6 @@
 #lang racket
-(require "c1_11.rkt")
+;(require "c1_16.rkt")
+;(fast-exp 2 10)
 
-(f 10 "recursive")
-(f 10 "iterative")
+;(require "c1_17.rkt")
+;(mult 2 1)
