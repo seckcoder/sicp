@@ -72,8 +72,29 @@
 
 (require "newton.rkt")
 (define (cubic-root x)
-  (newtons-method (lambda (y) (- (cube x)
+  (newtons-method (lambda (y) (- (cube y)
                                  x))
                   1.0))
+
+
+;; 1.9
+; the first is recursive
+; the second is iterative
+
+;; 1.10
+
+(define (A x y)
+  (cond ((= y 0) 0 )
+        ((= x 0) (* 2 y))
+        ((= y 1) 2)
+        (else (A (- x 1)
+                 (A x (- y 1))))))
+
+; 1024
+; 65536
+; 65536
+; f(n) = 2n
+; g(n) = 2^n
+; h(n) = 2^2^2...2
 
 (provide (all-defined-out))
