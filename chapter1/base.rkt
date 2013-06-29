@@ -18,14 +18,18 @@
 (define (divides? a b)
   (= (remainder b a) 0))
 
-#|(define (fast-exp b n)|#
-  ;(fast-exp-impl 1 b n))
+;; c1_16.rkt
+#|(define (fast-exp b n)
+  (fast-exp-iter 1 b n))
 
-;(define (fast-exp-impl product b n)
-  ;(display (cons b n))
-  ;(cond ((= n 0) 1)
-        ;((even? n) (fast-exp-impl product (square b) (/ n 2)))
-        #|(else (fast-exp-impl (* product b) b (- n 1)))))|#
+(define (fast-exp-iter product b n)
+  (cond ((= n 0) product)
+        ((even? n) (fast-exp-iter product
+                                  (square b)
+                                  (/ n 2)))
+        (else (fast-exp-iter (* product b)
+                             b
+                             (- n 1)))))|#
 
 (define (fast-exp b n)
   (cond ((= n 0) 1)
