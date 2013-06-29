@@ -1,15 +1,21 @@
 #lang racket
+
 (require "base.rkt")
 (require "exp.rkt")
 (require racket/block)
 
+;; check whether a^n % n = a(Ie, a^n and a are congruent modulo n, or a^n = a (mod n))
+; here expmod is much more efficient than fast-exp
+; since for expmod, it tries to reduce the base which
+; greatly reduce the time complexity for large numbers.
+(define (congruent-modulo? n a)
+  ;(= (remainder (fast-exp a n) n) a))
+  (= (expmod a n n) a))
+
+
 (define (fermat-test n)
   (define (try-it a)
-    ;(= (remainder (fast-exp a n) n) a))
-    ; here expmod is much more efficient than fast-exp
-    ; since for expmod, it tries to reduce the base which
-    ; greatly reduce the time complexity for large numbers.
-    (= (expmod a n n) a))
+    (congruent-modulo? n a))
   ;; since random doesnot accept random number greater than 4294967087
   ;; for numbers not too much larger than 4294967087, this test seems 
   ;; to be enough

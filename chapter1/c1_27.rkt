@@ -4,12 +4,9 @@
 (require racket/block)
 
 ;; a number is carmichael number if it fools the fermal test
-;; ie it's prime number but it's not congruent module to every number a < n
-;; or it's not a prime number but it's congruent module to every number a < n
+;; ie it's not a prime number but it's congruent module to every number a < n
 (define (carmichael? n)
-  (let ((isprime (prime? n)))
-    (or (and isprime (not congruent-every? n))
-        (and (not isprime) (congruent-every? n)))))
+  (and (not (prime? n)) (congruent-every? n)))
 
 ;; check whether a^n % n = a(Ie, a^n and a are congruent modulo n, or a^n = a (mod n))
 (define (congruent-modulo? n a)
