@@ -16,4 +16,7 @@
 (define (halve n)
   (/ n 2))
 
+(define (divides? a b)
+  (= (remainder b a) 0))
+
 (provide (all-defined-out))
