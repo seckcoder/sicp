@@ -9,6 +9,9 @@
 (define (even? n)
   (= (remainder n 2) 0))
 
+(define (odd? n)
+  (not (even? n)))
+
 (define (double n)
   (+ n n))
 
@@ -50,5 +53,20 @@
 (define (congruent-modulo? n a)
   ;(= (remainder (fast-exp a n) n) a))
   (= (expmod a n n) a))
+
+(define (sum term a next b)
+  (if (> a b)
+    0
+    (+ (term a)
+       (sum term (next a) next b))))
+
+;; interative version of sum
+(define (sum-iter term a next b)
+  (define (iter res a)
+    (if (> a b)
+      res
+      (iter (+ res (term a))
+            (next a))))
+  (iter 0 a))
 
 (provide (all-defined-out))
