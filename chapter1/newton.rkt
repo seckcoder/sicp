@@ -6,12 +6,24 @@
 (define (fixed-point-of-transform g transform guess)
   (fixed-point (transform g) guess))
 
+(define (iterative-improve good-enough? improve)
+  (lambda (initial)
+    (define (iter guess)
+      (let ((new-guess (improve guess)))
+        (if (good-enough? guess new-guess)
+          new-guess
+          (iter new-guess))))
+    (iter initial)))
+
 (define (fixed-point f guess)
+  ((iterative-improve good-enough? f) guess))
+
+#|(define (fixed-point f guess)
   (let ((new-guess (f guess)))
     (if (good-enough? guess new-guess)
       new-guess
       (fixed-point f new-guess))))
-
+|#
 
 ;; x = x - f(x) / f'(x)
 (define (newton-transform f)
@@ -30,4 +42,7 @@
      (abs (/ (- new-guess old-guess)
              new-guess))))
 
-(provide newtons-method fixed-point-of-transform fixed-point)
+(provide newtons-method
+         fixed-point-of-transform
+         fixed-point
+         iterative-improve)

@@ -141,4 +141,6 @@
     a
     (gcd b (remainder a b))))|#
 
+(define (log2 n)
+  (/ (log n) (log 2)))
 (provide (all-defined-out))
