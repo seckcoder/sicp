@@ -4,7 +4,7 @@
 (require "continued_fraction.rkt")
 
 ;; note k in [1,n]
-(define (approx-e)
+(define (e-cf)
   (+ (cont-frac-recur (lambda (k) 1.0)
                       ; represent Di with k
                       (lambda (k) (cond ((divides? 3 (- k 2)) (* 2
@@ -13,4 +13,4 @@
                                         (else 1)))
                       10) 2))
 
-(approx-e)
+(e-cf)
