@@ -1,5 +1,14 @@
 #lang racket
 
+(define (same a)
+  a)
+
+(define (inc1 a)
+  (+ 1 a))
+
+(define (dec1 a)
+  (- a 1))
+
 (define (square a)
   (* a a))
 
@@ -105,6 +114,9 @@
 (define (filter-sum term a next filter b)
   (filter-accumulate + 0 filter term a next b))
 
+(define (filter-product term a next filter b)
+  (filter-accumulate * 1 filter term a next b))
+
 (define (product term a next b)
   (accumulate * 1 term a next b))
 
@@ -122,9 +134,9 @@
                     b
                     filter))))
 
-(define (gcd a b)
+#|(define (gcd a b)
   (if (= b 0)
     a
-    (gcd b (remainder a b))))
+    (gcd b (remainder a b))))|#
 
 (provide (all-defined-out))

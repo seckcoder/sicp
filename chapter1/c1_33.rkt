@@ -6,8 +6,15 @@
 (define (prime-square-sum a b)
   (filter-sum square
               a
-              (lambda (v) (+ 1 v))
+              inc1
               prime?
               b))
 
-(provide prime-square-sum)
+(define (reprime-product n)
+  (filter-product same
+                  2
+                  inc1
+                  (lambda (k) (= (gcd k n) 1)) 
+                  (- n 1)))
+
+(provide prime-square-sum reprime-product)

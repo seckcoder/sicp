@@ -14,9 +14,9 @@
   (define (term k)
     (/ (get-numerator k) (get-denominator k)))
   (* (exact->inexact 4) (product term
-                                      0
-                                      (lambda (k) (+ 1 k))
-                                      (- n 1))))
+                                 0
+                                 (lambda (k) (+ 1 k))
+                                 (- n 1))))
 
 (define (factorial n)
   (product-iter
