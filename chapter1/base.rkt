@@ -54,19 +54,77 @@
   ;(= (remainder (fast-exp a n) n) a))
   (= (expmod a n n) a))
 
-(define (sum term a next b)
-  (if (> a b)
-    0
-    (+ (term a)
-       (sum term (next a) next b))))
 
-;; interative version of sum
-(define (sum-iter term a next b)
+(define (filter-accumulate combiner null-value filter term a next b)
+  (cond ((> a b) null-value)
+        ((filter a) (combiner (term a)
+                              (filter-accumulate combiner
+                                          null-value
+                                          filter
+                                          term
+                                          (next a)
+                                          next
+                                          b)))
+        (else (filter-accumulate combiner
+                                 null-value
+                                 filter
+                                 term
+                                 (next a)
+                                 next
+                                 b))))
+
+(define (accumulate combiner null-value term a next b)
+  (filter-accumulate combiner
+                     null-value
+                     (lambda (n) true)
+                     term
+                     a
+                     next
+                     b))
+
+;; the iterative version of accumulate
+(define (filter-accumulate-iter combiner null-value filter term a next b)
   (define (iter res a)
-    (if (> a b)
-      res
-      (iter (+ res (term a))
-            (next a))))
-  (iter 0 a))
+    (cond ((> a b) res)
+          ((filter a) (iter (combiner res (term a)) (next a)))
+          (else (iter res (next a)))))
+  (iter null-value a))
+
+(define (accumulate-iter combiner null-value term a next b)
+  (filter-accumulate-iter combiner
+                          null-value
+                          (lambda (x) true)
+                          term
+                          a
+                          next
+                          b))
+
+(define (sum term a next b)
+  (accumulate + 0 term a next b))
+
+(define (filter-sum term a next filter b)
+  (filter-accumulate + 0 filter term a next b))
+
+(define (product term a next b)
+  (accumulate * 1 term a next b))
+
+(define (sum-iter term a next b)
+  (accumulate-iter + 0 term a next b))
+
+(define (product-iter term a next b)
+  (accumulate-iter * 1 term a next b))
+
+;; find the first number that pass filter and in range[a,b]
+(define (next a b step-func filter)
+  (cond ((> a b) a)
+        ((filter a) a)
+        (else (next (step-func a)
+                    b
+                    filter))))
+
+(define (gcd a b)
+  (if (= b 0)
+    a
+    (gcd b (remainder a b))))
 
 (provide (all-defined-out))
