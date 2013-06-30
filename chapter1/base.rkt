@@ -30,6 +30,8 @@
 (define (divides? a b)
   (= (remainder b a) 0))
 
+(define (average a b)
+  (/ (+ a b) 2))
 ;; c1_16.rkt
 #|(define (fast-exp b n)
   (fast-exp-iter 1 b n))

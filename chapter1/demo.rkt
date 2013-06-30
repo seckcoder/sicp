@@ -1,5 +1,5 @@
 #lang racket
 
-(require "c1_33.rkt")
+(require "c1_35.rkt")
 
-(reprime-product 5)
+(golden-ratio)

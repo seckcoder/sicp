@@ -1,6 +1,5 @@
 #lang racket
 
-
 ;; x = x - f(x) / f'(x)
 (define (newtons-method f guess)
   (fixed-point (newton-transform f)
@@ -27,4 +26,4 @@
       new-guess
       (fixed-point f new-guess))))
 
-(provide newtons-method)
+(provide newtons-method fixed-point)
