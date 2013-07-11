@@ -143,4 +143,9 @@
 
 (define (log2 n)
   (/ (log n) (log 2)))
+
+(define (atom? a)
+  (and (not (null? a))
+       (not (pair? a))))
+
 (provide (all-defined-out))
