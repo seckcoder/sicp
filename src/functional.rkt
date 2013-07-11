@@ -14,4 +14,16 @@
         (else (cons (foldr op initial (map car seq))
                     (accumulate-n op initial (map cdr seq))))))
 
+;; what proc returned should be a list.
+(define (flatmap proc seq)
+  (foldr append null (map proc seq)))
+
+(define (enumerate-interval low high)
+  (define (iter result low high)
+      (cond ((> low high) result)
+            (else (iter (cons high result)
+                        low
+                        (- high 1)))))
+  (iter null low high))
+
 (provide (all-defined-out))
