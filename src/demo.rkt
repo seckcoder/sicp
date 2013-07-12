@@ -1,13 +1,8 @@
 #lang racket
 
 
-(require "base.rkt")
+(require "deriv.rkt")
 
-(pair? '(1)) ; a not null list
-(list? '(2)) ;; a null or non-null list
-(atom? 3)
-(atom? '()) ;; '() is null
-(null? 2)
+(deriv '(+ x 3) 'x)
 
-(append '(1 2 3) null)
-
+(deriv '(* x y) 'x)
