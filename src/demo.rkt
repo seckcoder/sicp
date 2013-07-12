@@ -3,13 +3,7 @@
 
 (require "deriv.rkt")
 
-(deriv '(+ x 3) 'x)
-
-(deriv '(* x y) 'x)
-
-(deriv '(* (* x y) (+ x 3)) 'x)
-
-(deriv '(** x 1) 'x)
-(deriv '(** x 1) 'v)
-(deriv '(** x 3) 'x)
-(deriv '(** x n) 'x)
+(test)
+;(make-sum -2 (make-sum 3 'x) 2 'y)
+;(make-product 3 4 'x 'y 10 0)
+;(make-sum 3 4)
