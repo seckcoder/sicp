@@ -71,11 +71,6 @@
             (encode (cdr message) tree))))
 
 (define (encode-symbol symbol tree)
-  (define (symbol-in-tree? tree symbol)
-    (if (leaf? tree)
-      (eq? (symbol-leaf tree) symbol)
-      (or (symbol-in-tree? (left-branch tree) symbol)
-          (symbol-in-tree? (right-branch tree) symbol))))
   ; lookup symbol in tree, and return (finded paths), bits store the
   ; temp paths when search the symbol.
   (define (lookup symbol tree bits)
