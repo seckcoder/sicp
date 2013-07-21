@@ -1,0 +1,13 @@
+(library
+  (init)
+  (export init)
+  (import (rnrs)
+          (complex-rectangular)
+          (complex-polar)
+          (deriv))
+  (define (init)
+    (install-rectangular-package)
+    (install-polar-package)
+    (install-deriv-package)
+    )
+  )
