@@ -1,0 +1,11 @@
+(define (cycle? x)
+  (define (recur x visited)
+    (cond ((not (pair? x)) #f)
+          ((memq x visited) #t)
+          (else (recur (cdr x) (cons x visited)))))
+  (recur x '()))
+
+(define cycle '(1 2 3))
+(set-cdr! (last-pair cycle) cycle)
+(display (cycle? cycle))
+(display (cycle? '(1 2 3)))
