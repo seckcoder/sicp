@@ -2,8 +2,7 @@
         (base)
         (complex)
         (init)
+        (functional)
         )
 
-(init)
-(define a (make-from-real-imag 3 0.5))
-(myreal-part a)
+(display ((compose square -) 1 2 3))
