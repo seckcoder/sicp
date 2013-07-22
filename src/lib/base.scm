@@ -14,11 +14,11 @@
   (define (type-tag datum)
     (if (pair? datum)
       (car datum)
-      (error "Bad tagged datum -- TYPE-TAG" datum)))
+      (error 'type-tag "Bad tagged datum" datum)))
   (define (contents datum)
     (if (pair? datum)
       (cdr datum)
-      (error "Bad tagged datum -- CONTENTS" datum)))
+      (error 'contents "Bad tagged datum" datum)))
   (define (square x)
     (* x x))
   (define (apply-generic op . args)
@@ -28,6 +28,7 @@
         (if proc
           (apply proc (map contents args))
           (error
-            "No method for these types -- APPLY-GENERIC"
+            'apply-generic
+            "No method for these types"
             (list op type-tags))))))
   )

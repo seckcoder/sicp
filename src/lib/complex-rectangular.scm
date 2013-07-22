@@ -2,7 +2,9 @@
   (complex-rectangular)
   (export install-rectangular-package)
   (import (rnrs)
-          (base))
+          (base)
+          (functional))
+
   (define (install-rectangular-package)
     (define (myreal-part z) (car z))
     (define (myimag-part z) (cdr z))
@@ -20,8 +22,8 @@
     (put 'magnitude '(rectangular) mymagnitude)
     (put 'angle '(rectangular) myangle)
     (put 'make-from-real-imag 'rectangular
-         (lambda (x y) (tag (make-from-real-imag x y))))
+         (compose tag make-from-real-imag))
     (put 'make-from-mag-ang 'rectangular
-         (lambda (r a) (tag (make-from-mag-ang r a))))
+         (compose tag make-from-mag-ang))
     'ok)
   )

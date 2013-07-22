@@ -2,7 +2,8 @@
   (complex-polar)
   (export install-polar-package)
   (import (rnrs)
-          (base))
+          (base)
+          (functional))
   (define (install-polar-package)
     (define (myreal-part z) (* (mymagnitude z) (cos (myangle z))))
     (define (myimag-part z) (* (mymagnitude z) (sin (myangle z))))
@@ -19,8 +20,8 @@
     (put 'magnitude '(polar) mymagnitude)
     (put 'angle '(polar) myangle)
     (put 'make-from-real-imag 'polar
-         (lambda (x y) (tag (make-from-real-imag x y))))
+         (compose tag make-from-real-imag))
     (put 'make-from-mag-ang 'polar
-         (lambda (r a) (tag (make-from-mag-ang r a))))
+         (compose tag make-from-mag-ang))
     'ok)
   )
