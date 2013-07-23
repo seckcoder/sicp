@@ -7,7 +7,7 @@
           make-rational-number
           make-complex-from-real-imag
           make-complex-from-mag-ang
-          add sub mul divide equ?
+          add sub mul divide equ? =zero?
           )
 
 
@@ -22,7 +22,9 @@
   (define (sub x y) (apply-generic 'sub x y))
   (define (mul x y) (apply-generic 'mul x y))
   (define (divide x y) (apply-generic 'div x y))
-  (define (equ? x y) (apply-generic 'equ x y))
+  (define (equ? x y) (apply-generic 'equ? x y))
+  (define (make-zero type-tag) (get 'zero type-tag))
+  (define (=zero? x) (equ? x (make-zero (type-tag x))))
 
   (define (install-scheme-number-package)
     (define (tag x)
@@ -35,8 +37,9 @@
          (compose tag *))
     (put 'div '(scheme-number scheme-number)
          (compose tag /))
-    (put 'equ '(scheme-number scheme-number) =)
+    (put 'equ? '(scheme-number scheme-number) =)
     (put 'make 'scheme-number tag)
+    (put 'zero 'scheme-number (make-scheme-number 0))
     )
 
   (define (install-rational-package)
@@ -70,8 +73,9 @@
     (put 'sub '(rational rational) (compose tag sub-rat))
     (put 'mul '(rational rational) (compose tag mul-rat))
     (put 'div '(rational rational) (compose tag div-rat))
-    (put 'equ '(rational rational) eq-rat)
+    (put 'equ? '(rational rational) eq-rat)
     (put 'make 'rational (compose tag make-rat))
+    (put 'zero 'rational (make-rational-number 0 1))
     )
 
   (define (make-rational-number n d)
@@ -106,7 +110,7 @@
     (put 'sub '(complex complex) (compose tag sub-complex))
     (put 'mul '(complex complex) (compose tag mul-complex))
     (put 'div '(complex complex) (compose tag div-complex))
-    (put 'equ '(complex complex) eq-complex)
+    (put 'equ? '(complex complex) eq-complex)
     (put 'make-from-real-imag 'complex
          (compose tag make-from-real-imag))
     (put 'make-from-mag-ang 'complex
@@ -115,6 +119,7 @@
     (put 'imag-part '(complex) myimag-part)
     (put 'magnitude '(complex) mymagnitude)
     (put 'angle '(complex) myangle)
+    (put 'zero 'complex (make-complex-from-real-imag 0 0))
     )
 
   (define (make-complex-from-real-imag x y)
