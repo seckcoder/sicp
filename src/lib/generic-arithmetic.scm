@@ -7,7 +7,7 @@
           make-rational-number
           make-complex-from-real-imag
           make-complex-from-mag-ang
-          add sub mul divide
+          add sub mul divide equ?
           )
 
 
@@ -22,6 +22,7 @@
   (define (sub x y) (apply-generic 'sub x y))
   (define (mul x y) (apply-generic 'mul x y))
   (define (divide x y) (apply-generic 'div x y))
+  (define (equ? x y) (apply-generic 'equ x y))
 
   (define (install-scheme-number-package)
     (define (tag x)
@@ -34,6 +35,7 @@
          (compose tag *))
     (put 'div '(scheme-number scheme-number)
          (compose tag /))
+    (put 'equ '(scheme-number scheme-number) =)
     (put 'make 'scheme-number tag)
     )
 
@@ -57,6 +59,10 @@
     (define (div-rat x y)
       (make-rat (* (numer x) (denom y))
                 (* (denom x) (numer y))))
+    
+    (define (eq-rat x y)
+      (and (= (numer x) (numer y))
+           (= (denom x) (denom y))))
 
     ;; interface to rest of the system
     (define (tag x) (attach-tag 'rational x))
@@ -64,6 +70,7 @@
     (put 'sub '(rational rational) (compose tag sub-rat))
     (put 'mul '(rational rational) (compose tag mul-rat))
     (put 'div '(rational rational) (compose tag div-rat))
+    (put 'equ '(rational rational) eq-rat)
     (put 'make 'rational (compose tag make-rat))
     )
 
@@ -88,6 +95,9 @@
     (define (div-complex z1 z2)
       (make-from-mag-ang (/ (mymagnitude z1) (mymagnitude z2))
                          (- (myangle z1) (myangle z2))))
+    (define (eq-complex z1 z2)
+      (and (= (myreal-part z1) (myreal-part z2))
+           (= (myimag-part z1) (myimag-part z2))))
 
     ;; imported procedures from rectangular and polar packages
     ;; interface to rest of the system
@@ -96,6 +106,7 @@
     (put 'sub '(complex complex) (compose tag sub-complex))
     (put 'mul '(complex complex) (compose tag mul-complex))
     (put 'div '(complex complex) (compose tag div-complex))
+    (put 'equ '(complex complex) eq-complex)
     (put 'make-from-real-imag 'complex
          (compose tag make-from-real-imag))
     (put 'make-from-mag-ang 'complex
