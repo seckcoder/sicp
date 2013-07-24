@@ -3,12 +3,43 @@
   (export operation-table get put
           type-tag contents attach-tag apply-generic
           square
+          put-type get-type-base get-type-precendence
           )
   (import (rnrs)
-          (table2d))
+          (table2d)
+          (dict))
   (define operation-table (make-table))
   (define get (operation-table 'lookup-proc))
   (define put (operation-table 'insert-proc!))
+  (define type-tower (make-dict))
+  (define (put-type type base precedence)
+    (type-tower type (list base precedence)))
+  (define (get-type-base type) (car (type-tower type)))
+  (define (get-type-precendence type) (cadr (type-tower type)))
+  (define (type-top? type)
+    (null? (type-tower type)))
+  (define (type> type1 type2)
+    (cond ((and (type-top? type1)
+                (type-top? type2)) #f)
+          ((type-top? type1) #t)
+          ((type-top? type2) #f)
+          ((> (get-type-precendence type1)
+              (get-type-precendence type2))
+           #t)
+          (else #f)))
+
+  (define (type= type1 type2)
+    (cond ((and (type-top? type1)
+                (type-top? type2)) #t)
+          ((or (type-top? type1)
+               (type-top? type2)) #f)
+          (else (= (get-type-precendence type1)
+                   (get-type-precendence type2)))))
+
+  (define (type< type1 type2)
+    (and (not (type> type1 type2))
+         (not (type= type1 type2))))
+
   (define (attach-tag type-tag contents)
     (cons type-tag contents))
   (define (type-tag datum)
@@ -24,11 +55,29 @@
   (define (apply-generic op . args)
     ; args corresponding to the args of op
     (let ((type-tags (map type-tag args)))
+      (define (error-msg)
+        (error
+            'apply-generic
+            "No method for these types"
+            (list op type-tags)))
       (let ((proc (get op type-tags)))
         (if proc
           (apply proc (map contents args))
-          (error
-            'apply-generic
-            "No method for these types"
-            (list op type-tags))))))
+          (if (= (length type-tags) 2)
+            (let ((type1 (car type-tags))
+                  (arg1 (car args))
+                  (type2 (cadr type-tags))
+                  (arg2 (cadr args)))
+              (cond ((and (type-top? type1) (type-top? type2))
+                     ; reached top, give up
+                     (error-msg))
+                    ((type> type1 type2)
+                     (apply-generic op arg1 (raise arg2)))
+                    ((type= type1 type2)
+                     (apply-generic op
+                                    (raise arg1)
+                                    (raise arg2)))
+                    ((type< type1 type2)
+                     (apply-generic op (raise arg1) arg2))))
+            (error-msg))))))
   )
