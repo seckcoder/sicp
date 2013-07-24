@@ -1,29 +1,73 @@
+; type system. For historical reason, this file is named base.
 (library
   (base)
   (export operation-table get put
           type-tag contents attach-tag apply-generic
           square
-          inherit get-type-base get-type-precendence build-tower
+          inherit! build-tower!
           )
   (import (rnrs)
+          (rnrs mutable-pairs)
           (table2d)
-          (dict))
+          (utils)
+          (dict)
+          )
   (define operation-table (make-table))
   (define get (operation-table 'lookup-proc))
   (define put (operation-table 'insert-proc!))
+  (define (attach-tag type-tag contents)
+    (cons type-tag contents))
+  (define (type-tag datum)
+    (if (pair? datum)
+      (car datum)
+      (error 'type-tag "Bad tagged datum" datum)))
+  (define (contents datum)
+    (if (pair? datum)
+      (cdr datum)
+      (error 'contents "Bad tagged datum" datum)))
+
   (define type-tower (make-dict))
   (define (type-tower-insert! k v)
     ((type-tower 'insert) k v))
   (define (type-tower-lookup k)
     ((type-tower 'lookup) k))
-  (define (put-type type base precedence)
-    (type-tower-insert! type (list base precedence)))
-  (define (inherit type base)
-    (put-type type base -1))
-  (define (get-type-base type) (car (type-tower-lookup type)))
-  (define (get-type-precendence type) (cadr (type-tower type)))
+  ; randomly return a type
+  (define (type-tower-atype)
+    ((type-tower 'akey)))
+
+  (define (put-type type base child precedence)
+    (type-tower-insert! type (make-type-attr base child precedence)))
+  (define (inherit! type base)
+    (let ((type-attr (type-tower-lookup type))
+          (base-attr (type-tower-lookup base)))
+      (if (null? type-attr)
+        (put-type type base '() -1)
+        (set-type-attr-base! type-attr base))
+      (if (null? base-attr)
+        (put-type base '() type -1)
+        (set-type-attr-child! base-attr type))
+      #t))
+
+  (define (set-type-precedence! type precedence)
+    (let ((type-attr (type-tower-lookup type)))
+      (set-type-attr-precedence! type-attr precedence)))
+  (define (get-type-base type) (type-attr-base (type-tower-lookup type)))
+  (define (get-type-precendence type) (type-attr-precedence (type-tower-lookup type)))
+  (define (get-type-child type) (type-attr-child (type-tower-lookup type)))
+  (define (type-attr-base type-attr) (car type-attr))
+  (define (set-type-attr-base! type-attr base) (set-car! type-attr base))
+  (define (type-attr-child type-attr) (cadr type-attr))
+  (define (set-type-attr-child! type-attr child) (set-cadr! type-attr child))
+  (define (type-attr-precedence type-attr) (caddr type-attr))
+  (define (set-type-attr-precedence! type-attr precedence)
+    (set-caddr! type-attr precedence))
+  (define (make-type-attr base child precedence)
+    (list base child precedence))
   (define (type-top? type)
-    (null? (type-tower type)))
+    (null? (get-type-base type)))
+  (define (type-bottom? type)
+    (null? (get-type-child type)))
+
   (define (type> type1 type2)
     (cond ((and (type-top? type1)
                 (type-top? type2)) #f)
@@ -46,29 +90,32 @@
     (and (not (type> type1 type2))
          (not (type= type1 type2))))
 
-  (define (build-tower)
-    (
+  (define (type-tower-lowest)
+    (let ((type (type-tower-atype)))
+      (define (recur type)
+        (cond ((type-bottom? type) type)
+              (else (recur (get-type-child type)))))
+      (recur type)))
 
-  (define (attach-tag type-tag contents)
-    (cons type-tag contents))
-  (define (type-tag datum)
-    (if (pair? datum)
-      (car datum)
-      (error 'type-tag "Bad tagged datum" datum)))
-  (define (contents datum)
-    (if (pair? datum)
-      (cdr datum)
-      (error 'contents "Bad tagged datum" datum)))
-  (define (square x)
-    (* x x))
-  (define (apply-generic op . args)
+  (define (update-type-precedence-bottom-up type precedence)
+    (cond ((type-top? type) #t)
+          (else (begin
+                  (set-type-precedence! type precedence)
+                  (update-type-precedence-bottom-up (get-type-base type)
+                                                    (+ 1 precedence))))))
+
+  (define (build-tower!)
+    (let ((lowest (type-tower-lowest)))
+      (update-type-precedence-bottom-up lowest 0)))
+
+  (define (apply-generic-type-tower op . args)
     ; args corresponding to the args of op
     (let ((type-tags (map type-tag args)))
       (define (error-msg)
         (error
-            'apply-generic
-            "No method for these types"
-            (list op type-tags)))
+          'apply-generic-type-tower
+          "No method for these types"
+          (list op type-tags)))
       (let ((proc (get op type-tags)))
         (if proc
           (apply proc (map contents args))
@@ -81,12 +128,15 @@
                      ; reached top, give up
                      (error-msg))
                     ((type> type1 type2)
-                     (apply-generic op arg1 (raise arg2)))
+                     (apply-generic-type-tower op arg1 (raise arg2)))
                     ((type= type1 type2)
-                     (apply-generic op
-                                    (raise arg1)
-                                    (raise arg2)))
+                     (apply-generic-type-tower op
+                                               (raise arg1)
+                                               (raise arg2)))
                     ((type< type1 type2)
-                     (apply-generic op (raise arg1) arg2))))
+                     (apply-generic-type-tower op (raise arg1) arg2))))
             (error-msg))))))
+
+  (define (apply-generic op . args)
+    (apply-generic-type-tower op args))
   )

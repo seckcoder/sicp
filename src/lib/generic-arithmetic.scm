@@ -14,7 +14,8 @@
   (import (rnrs)
           (base)
           (complex)
-          (functional))
+          (functional)
+          )
 
   (define (make-scheme-number n)
     ((get 'make 'scheme-number) n))
@@ -41,8 +42,8 @@
     (put 'make 'scheme-number tag)
     (put 'zero 'scheme-number (make-scheme-number 0))
     ; integer and reall are all scheme-number
-    (inherit 'integer 'rational)
-    (inherit 'real 'complex)
+    (inherit! 'integer 'rational)
+    (inherit! 'real 'complex)
     )
 
   (define (install-rational-package)
@@ -79,7 +80,7 @@
     (put 'equ? '(rational rational) eq-rat)
     (put 'make 'rational (compose tag make-rat))
     (put 'zero 'rational (make-rational-number 0 1))
-    (inherit 'rational 'real)
+    (inherit! 'rational 'real)
     )
 
   (define (make-rational-number n d)

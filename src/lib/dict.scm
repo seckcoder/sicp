@@ -22,10 +22,18 @@
             (set-cdr! local-table (cons (make-record key value)
                                         (cdr local-table))))
           value))
+      (define (keys)
+        (map car (cdr local-table)))
+
+      ; randomly return a key
+      (define (akey)
+        (record-key (car (cdr local-table))))
+               
       (define (dispatch action)
-        (cond ((= action 'lookup) lookup)
-              ((= action 'update) insert!)
-              ((= action 'keys) keys)
+        (cond ((eq? action 'lookup) lookup)
+              ((eq? action 'insert) insert!)
+              ((eq? action 'keys) keys)
+              ((eq? action 'akey) akey)
               (else (error 'dict-dispatch "UNKNOWN ACTION" action))))
       dispatch))
   )
