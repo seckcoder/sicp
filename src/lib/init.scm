@@ -13,5 +13,6 @@
     (install-scheme-number-package)
     (install-rational-package)
     (install-complex-package)
+    (build-tower)
     )
   )

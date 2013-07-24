@@ -3,7 +3,7 @@
   (export operation-table get put
           type-tag contents attach-tag apply-generic
           square
-          put-type get-type-base get-type-precendence
+          inherit get-type-base get-type-precendence build-tower
           )
   (import (rnrs)
           (table2d)
@@ -12,9 +12,15 @@
   (define get (operation-table 'lookup-proc))
   (define put (operation-table 'insert-proc!))
   (define type-tower (make-dict))
+  (define (type-tower-insert! k v)
+    ((type-tower 'insert) k v))
+  (define (type-tower-lookup k)
+    ((type-tower 'lookup) k))
   (define (put-type type base precedence)
-    (type-tower type (list base precedence)))
-  (define (get-type-base type) (car (type-tower type)))
+    (type-tower-insert! type (list base precedence)))
+  (define (inherit type base)
+    (put-type type base -1))
+  (define (get-type-base type) (car (type-tower-lookup type)))
   (define (get-type-precendence type) (cadr (type-tower type)))
   (define (type-top? type)
     (null? (type-tower type)))
@@ -39,6 +45,9 @@
   (define (type< type1 type2)
     (and (not (type> type1 type2))
          (not (type= type1 type2))))
+
+  (define (build-tower)
+    (
 
   (define (attach-tag type-tag contents)
     (cons type-tag contents))
