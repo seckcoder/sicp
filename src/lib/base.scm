@@ -155,7 +155,13 @@
   (define (divide x y) (apply-generic 'div x y))
   (define (equ? x y) (apply-generic 'equ? x y))
   (define (make-zero type-tag) (get 'zero type-tag))
-  (define (=zero? x) (equ? x (make-zero (type-tag x))))
+  (define (=zero? x)
+    (let ((equal-zero-proc (get '=zero? (type-tag x))))
+      ; if the type has defined =zero?, we will use it.
+      ; otherwise we use the default(equal to zero)
+      (if equal-zero-proc
+        (equal-zero-proc (contents x))
+        (equ? x (make-zero (type-tag x))))))
 
   (define (dropif x)
     (if (get 'project (type-tag x))
