@@ -2,7 +2,7 @@
 (library
   (base)
   (export operation-table get put
-          type-tag contents attach-tag apply-generic
+          type-tag contents attach-tag apply-generic myraise
           square
           inherit! build-tower!
           )
@@ -108,6 +108,7 @@
     (let ((lowest (type-tower-lowest)))
       (update-type-precedence-bottom-up lowest 0)))
 
+
   (define (apply-generic-type-tower op . args)
     ; args corresponding to the args of op
     (let ((type-tags (map type-tag args)))
@@ -128,15 +129,16 @@
                      ; reached top, give up
                      (error-msg))
                     ((type> type1 type2)
-                     (apply-generic-type-tower op arg1 (raise arg2)))
+                     (apply-generic-type-tower op arg1 (myraise arg2)))
                     ((type= type1 type2)
                      (apply-generic-type-tower op
-                                               (raise arg1)
-                                               (raise arg2)))
+                                               (myraise arg1)
+                                               (myraise arg2)))
                     ((type< type1 type2)
-                     (apply-generic-type-tower op (raise arg1) arg2))))
+                     (apply-generic-type-tower op (myraise arg1) arg2))))
             (error-msg))))))
 
+  (define (myraise x) ((get 'raise (type-tag x)) (contents x)))
   (define (apply-generic op . args)
-    (apply-generic-type-tower op args))
+    (apply apply-generic-type-tower (cons op args)))
   )

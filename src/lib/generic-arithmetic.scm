@@ -1,24 +1,28 @@
 (library
   (generic-arithmetic)
-  (export install-scheme-number-package
+  (export install-integer-package
           install-rational-package
+          install-real-package
           install-complex-package
-          make-scheme-number
+          make-integer-number
+          make-real-number
           make-rational-number
           make-complex-from-real-imag
           make-complex-from-mag-ang
           add sub mul divide equ? =zero?
           )
 
-
   (import (rnrs)
+          (rnrs r5rs)
           (base)
           (complex)
           (functional)
           )
 
-  (define (make-scheme-number n)
-    ((get 'make 'scheme-number) n))
+  (define (make-integer-number n)
+    ((get 'make 'integer) n))
+  (define (make-real-number n)
+    ((get 'make 'real) n))
   (define (add x y) (apply-generic 'add x y))
   (define (sub x y) (apply-generic 'sub x y))
   (define (mul x y) (apply-generic 'mul x y))
@@ -27,22 +31,36 @@
   (define (make-zero type-tag) (get 'zero type-tag))
   (define (=zero? x) (equ? x (make-zero (type-tag x))))
 
-  (define (install-scheme-number-package)
+  (define (install-number-type-package number-type)
     (define (tag x)
-      (attach-tag 'scheme-number x))
-    (put 'add '(scheme-number scheme-number)
+      (attach-tag number-type x))
+    (put 'add (list number-type number-type)
          (compose tag +))
-    (put 'sub '(scheme-number scheme-number)
+    (put 'sub (list number-type number-type)
          (compose tag -))
-    (put 'mul '(scheme-number scheme-number)
+    (put 'mul (list number-type number-type)
          (compose tag *))
-    (put 'div '(scheme-number scheme-number)
+    (put 'div (list number-type number-type)
          (compose tag /))
-    (put 'equ? '(scheme-number scheme-number) =)
-    (put 'make 'scheme-number tag)
-    (put 'zero 'scheme-number (make-scheme-number 0))
-    ; integer and reall are all scheme-number
+    (put 'equ? (list number-type number-type) =)
+    (put 'make number-type tag)
+    )
+
+  (define (install-integer-package)
+    (define (integer->rational intv)
+      (make-rational-number intv 1))
+    (install-number-type-package 'integer)
+    (put 'raise 'integer integer->rational)
+    (put 'zero 'integer (make-integer-number 0))
     (inherit! 'integer 'rational)
+    )
+
+  (define (install-real-package)
+    (define (real->complex realv)
+      (make-complex-from-real-imag realv 0))
+    (install-number-type-package 'real)
+    (put 'raise 'real real->complex)
+    (put 'zero 'real (make-real-number 0.0))
     (inherit! 'real 'complex)
     )
 
@@ -66,10 +84,15 @@
     (define (div-rat x y)
       (make-rat (* (numer x) (denom y))
                 (* (denom x) (numer y))))
-    
+
     (define (eq-rat x y)
       (and (= (numer x) (numer y))
            (= (denom x) (denom y))))
+
+    (define (rational->real rationalv)
+      (make-real-number (exact->inexact
+                          (/ (numer rationalv)
+                             (denom rationalv)))))
 
     ;; interface to rest of the system
     (define (tag x) (attach-tag 'rational x))
@@ -80,6 +103,7 @@
     (put 'equ? '(rational rational) eq-rat)
     (put 'make 'rational (compose tag make-rat))
     (put 'zero 'rational (make-rational-number 0 1))
+    (put 'raise 'rational rational->real)
     (inherit! 'rational 'real)
     )
 
