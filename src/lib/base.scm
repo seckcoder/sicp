@@ -5,6 +5,7 @@
           type-tag contents attach-tag apply-generic myraise
           square
           inherit! build-tower!
+          add sub mul divide equ? =zero? dropif
           )
   (import (rnrs)
           (rnrs mutable-pairs)
@@ -34,6 +35,14 @@
   ; randomly return a type
   (define (type-tower-atype)
     ((type-tower 'akey)))
+
+  (define (typed? x)
+    (if (not (pair? x))
+      #f
+      (let ((type (type-tag x)))
+        (inlist? x
+                 (list 'integer 'real 'rational 'complex)
+                 eq?))))
 
   (define (put-type type base child precedence)
     (type-tower-insert! type (make-type-attr base child precedence)))
@@ -139,6 +148,28 @@
             (error-msg))))))
 
   (define (myraise x) ((get 'raise (type-tag x)) (contents x)))
+  (define (project x) ((get 'project (type-tag x)) (contents x)))
+  (define (add x y) (apply-generic 'add x y))
+  (define (sub x y) (apply-generic 'sub x y))
+  (define (mul x y) (apply-generic 'mul x y))
+  (define (divide x y) (apply-generic 'div x y))
+  (define (equ? x y) (apply-generic 'equ? x y))
+  (define (make-zero type-tag) (get 'zero type-tag))
+  (define (=zero? x) (equ? x (make-zero (type-tag x))))
+
+  (define (dropif x)
+    (if (get 'project (type-tag x))
+      (let ((simplified-x (project x)))
+        (if (get 'raise (type-tag simplified-x))
+          (let ((raised (myraise simplified-x)))
+            (if (equ? raised x)
+              (dropif simplified-x)
+              x))
+          x))
+      x))
   (define (apply-generic op . args)
-    (apply apply-generic-type-tower (cons op args)))
+    (let ((v (apply apply-generic-type-tower (cons op args))))
+      (if (typed? v)
+        (dropif v)
+        v)))
   )

@@ -9,11 +9,9 @@
           make-rational-number
           make-complex-from-real-imag
           make-complex-from-mag-ang
-          add sub mul divide equ? =zero?
           )
 
-  (import (rnrs)
-          (rnrs r5rs)
+  (import (chezscheme)
           (base)
           (complex)
           (functional)
@@ -23,13 +21,6 @@
     ((get 'make 'integer) n))
   (define (make-real-number n)
     ((get 'make 'real) n))
-  (define (add x y) (apply-generic 'add x y))
-  (define (sub x y) (apply-generic 'sub x y))
-  (define (mul x y) (apply-generic 'mul x y))
-  (define (divide x y) (apply-generic 'div x y))
-  (define (equ? x y) (apply-generic 'equ? x y))
-  (define (make-zero type-tag) (get 'zero type-tag))
-  (define (=zero? x) (equ? x (make-zero (type-tag x))))
 
   (define (install-number-type-package number-type)
     (define (tag x)
@@ -58,9 +49,20 @@
   (define (install-real-package)
     (define (real->complex realv)
       (make-complex-from-real-imag realv 0))
+    (define (real->rational x)
+      (define (recur flonum-numer int-denom)
+        ; we expect that 15.0 = 15
+        (if (= (flonum->fixnum flonum-numer)
+               flonum-numer)
+          (make-rational-number (flonum->fixnum flonum-numer)
+                                int-denom)
+          (recur (* 10 flonum-numer)
+                 (* 10 int-denom))))
+      (recur x 1))
     (install-number-type-package 'real)
     (put 'raise 'real real->complex)
     (put 'zero 'real (make-real-number 0.0))
+    (put 'project 'real real->rational)
     (inherit! 'real 'complex)
     )
 
@@ -90,9 +92,14 @@
            (= (denom x) (denom y))))
 
     (define (rational->real rationalv)
-      (make-real-number (exact->inexact
+      (make-real-number (real->flonum
                           (/ (numer rationalv)
                              (denom rationalv)))))
+
+    (define (rational->integer x)
+      (make-integer-number (flonum->fixnum (real->flonum
+                                             (/ (numer x)
+                                                (denom x))))))
 
     ;; interface to rest of the system
     (define (tag x) (attach-tag 'rational x))
@@ -104,6 +111,7 @@
     (put 'make 'rational (compose tag make-rat))
     (put 'zero 'rational (make-rational-number 0 1))
     (put 'raise 'rational rational->real)
+    (put 'project 'rational rational->integer)
     (inherit! 'rational 'real)
     )
 
@@ -132,6 +140,9 @@
       (and (= (myreal-part z1) (myreal-part z2))
            (= (myimag-part z1) (myimag-part z2))))
 
+    (define (complex->real z)
+      (make-real-number (myreal-part z)))
+
     ;; imported procedures from rectangular and polar packages
     ;; interface to rest of the system
     (define (tag z) (attach-tag 'complex z))
@@ -149,6 +160,7 @@
     (put 'magnitude '(complex) mymagnitude)
     (put 'angle '(complex) myangle)
     (put 'zero 'complex (make-complex-from-real-imag 0 0))
+    (put 'project 'complex complex->real)
     )
 
   (define (make-complex-from-real-imag x y)
