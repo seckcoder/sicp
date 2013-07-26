@@ -86,9 +86,9 @@
 ;(beautiful-display poly11)(display " = ")(newline)
 ;(beautiful-display (mul poly8 poly11))(newline)
 
-(beautiful-display poly8)(display " - ")
-(beautiful-display poly11)(display " = ")(newline)
-(beautiful-display (sub poly8 poly11))(newline)
+;(beautiful-display poly8)(display " - ")
+;(beautiful-display poly11)(display " = ")(newline)
+;(beautiful-display (sub poly8 poly11))(newline)
 
 ;(beautiful-display poly8)(newline)
 ;(beautiful-display poly12)(newline)
@@ -97,3 +97,6 @@
 
 ;(display (number->polynomial (make-integer-number 3) poly5))
 ;(beautiful-display (add poly1 poly12))
+
+
+;(beautiful-display (add poly5 poly6))
