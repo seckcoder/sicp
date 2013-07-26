@@ -33,6 +33,8 @@
          (compose tag *))
     (put 'div (list number-type number-type)
          (compose tag /))
+    (put 'negate number-type
+         (compose tag -))
     (put 'equ? (list number-type number-type) =)
     (put 'display number-type display)
     (put 'make number-type tag)
@@ -44,7 +46,7 @@
     (install-number-type-package 'integer)
     (put 'raise 'integer integer->rational)
     (put 'zero 'integer (make-integer-number 0))
-    (inherit! 'integer 'rational)
+    (declare-type 'integer 'rational)
     )
 
   (define (install-real-package)
@@ -64,7 +66,7 @@
     (put 'raise 'real real->complex)
     (put 'zero 'real (make-real-number 0.0))
     (put 'project 'real real->rational)
-    (inherit! 'real 'complex)
+    (declare-type 'real 'complex)
     )
 
   (define (install-rational-package)
@@ -88,6 +90,10 @@
       (make-rat (* (numer x) (denom y))
                 (* (denom x) (numer y))))
 
+    (define (negate-rat x)
+      (make-rat (- (numer x))
+                (denom x)))
+
     (define (eq-rat x y)
       (and (= (numer x) (numer y))
            (= (denom x) (denom y))))
@@ -108,6 +114,7 @@
     (put 'sub '(rational rational) (compose tag sub-rat))
     (put 'mul '(rational rational) (compose tag mul-rat))
     (put 'div '(rational rational) (compose tag div-rat))
+    (put 'negate 'rational (compose tag negate-rat))
     (put 'equ? '(rational rational) eq-rat)
     (put 'make 'rational (compose tag make-rat))
     (put 'zero 'rational (make-rational-number 0 1))
@@ -119,7 +126,7 @@
                               (display "/")
                               (display (denom x))
                               (display ")")))
-    (inherit! 'rational 'real)
+    (declare-type 'rational 'real)
     )
 
   (define (make-rational-number n d)
@@ -146,6 +153,9 @@
     (define (eq-complex z1 z2)
       (and (= (myreal-part z1) (myreal-part z2))
            (= (myimag-part z1) (myimag-part z2))))
+    (define (negate-complex z)
+      (make-from-real-imag (- (myreal-part z))
+                           (- (myimag-part z))))
 
     (define (complex->real z)
       (make-real-number (myreal-part z)))

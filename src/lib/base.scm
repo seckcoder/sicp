@@ -2,10 +2,11 @@
 (library
   (base)
   (export operation-table get put
+          coercion-table get-coercion put-coercion
           type-tag contents attach-tag apply-generic myraise
           square
-          inherit! build-tower!
-          add sub mul divide equ? =zero? dropif beautiful-display
+          declare-type build-tower!
+          add sub mul negate divide equ? =zero? dropif beautiful-display
           isinteger? equal-int1?
           )
   (import (rnrs)
@@ -14,9 +15,16 @@
           (utils)
           (dict)
           )
+  ; operation table
   (define operation-table (make-table))
   (define get (operation-table 'lookup-proc))
   (define put (operation-table 'insert-proc!))
+
+  ; coercion table
+  (define coercion-table (make-table))
+  (define get-coercion (coercion-table 'lookup-proc))
+  (define put-coercion (coercion-table 'insert-proc!))
+
   (define (attach-tag type-tag contents)
     (cons type-tag contents))
   (define (type-tag datum)
@@ -33,6 +41,14 @@
     ((type-tower 'insert) k v))
   (define (type-tower-lookup k)
     ((type-tower 'lookup) k))
+  (define (type-tower-lookup-or-fail k)
+    (let ((type-attr (type-tower-lookup k)))
+      (if (not (null? type-attr))
+        type-attr
+        (error 'type-tower-lookup-or-fail "CANNOT FIND:" k)
+        ))
+    )
+
   ; randomly return a type
   (define (type-tower-atype)
     ((type-tower 'akey)))
@@ -47,7 +63,7 @@
 
   (define (put-type type base child precedence)
     (type-tower-insert! type (make-type-attr base child precedence)))
-  (define (inherit! type base)
+  (define (declare-type type base)
     (let ((type-attr (type-tower-lookup type))
           (base-attr (type-tower-lookup base)))
       (if (null? type-attr)
@@ -56,14 +72,18 @@
       (if (null? base-attr)
         (put-type base '() type -1)
         (set-type-attr-child! base-attr type))
-      #t))
+      #t)
+    )
 
   (define (set-type-precedence! type precedence)
-    (let ((type-attr (type-tower-lookup type)))
+    (let ((type-attr (type-tower-lookup-or-fail type)))
       (set-type-attr-precedence! type-attr precedence)))
-  (define (get-type-base type) (type-attr-base (type-tower-lookup type)))
-  (define (get-type-precendence type) (type-attr-precedence (type-tower-lookup type)))
-  (define (get-type-child type) (type-attr-child (type-tower-lookup type)))
+  (define (get-type-base type)
+    (type-attr-base (type-tower-lookup-or-fail type)))
+  (define (get-type-precendence type)
+    (type-attr-precedence (type-tower-lookup-or-fail type)))
+  (define (get-type-child type)
+    (type-attr-child (type-tower-lookup-or-fail type)))
   (define (type-attr-base type-attr) (car type-attr))
   (define (set-type-attr-base! type-attr base) (set-car! type-attr base))
   (define (type-attr-child type-attr) (cadr type-attr))
@@ -135,25 +155,41 @@
                   (arg1 (car args))
                   (type2 (cadr type-tags))
                   (arg2 (cadr args)))
-              (cond ((and (type-top? type1) (type-top? type2))
-                     ; reached top, give up
-                     (error-msg))
-                    ((type> type1 type2)
-                     (apply-generic-type-tower op arg1 (myraise arg2)))
-                    ((type= type1 type2)
-                     (apply-generic-type-tower op
-                                               (myraise arg1)
-                                               (myraise arg2)))
-                    ((type< type1 type2)
-                     (apply-generic-type-tower op (myraise arg1) arg2))))
-            (error-msg))))))
-
+              ; first try coercion
+              (let ((t1->t2 (get-coercion type1 type2))
+                    (t2->t1 (get-coercion type2 type1)))
+                (cond (t1->t2
+                        (apply-generic op
+                                       (t1->t2 arg1 arg2)
+                                       arg2))
+                      (t2->t1
+                        (apply-generic op arg1 (t2->t1 arg2 arg1)))
+                      (else 
+                        ; then try raise
+                        (cond ((and (type-top? type1) (type-top? type2))
+                               ; reached top, give up
+                               (error-msg))
+                              ((type> type1 type2)
+                               (apply-generic-type-tower op arg1 (myraise arg2)))
+                              ((type= type1 type2)
+                               (apply-generic-type-tower op
+                                                         (myraise arg1)
+                                                         (myraise arg2)))
+                              ((type< type1 type2)
+                               (apply-generic-type-tower op (myraise arg1) arg2)))
+                        ))
+                )
+              )
+            (error-msg))
+          )
+        )))
   (define (myraise x) ((get 'raise (type-tag x)) (contents x)))
   (define (project x) ((get 'project (type-tag x)) (contents x)))
   (define (add x y) (apply-generic 'add x y))
   (define (sub x y) (apply-generic 'sub x y))
   (define (mul x y) (apply-generic 'mul x y))
   (define (divide x y) (apply-generic 'div x y))
+  (define (negate x) ((get 'negate (type-tag x)) (contents x)))
   (define (equ? x y) (apply-generic 'equ? x y))
   (define (make-zero type-tag) (get 'zero type-tag))
   (define (beautiful-display x) ((get 'display (type-tag x)) (contents x)))
