@@ -74,10 +74,11 @@
 (define poly11 (make-polynomial 'x (list (make-term 1 poly9)
                                          (make-term 0 poly10))))
 
-;(display poly8)(newline)
-;(display poly11)(newline)
+(beautiful-display poly8)(display " * ")
+(beautiful-display poly11)(display " = ")(newline)
 ;(newline)
-(display (add poly8 poly11))
+(beautiful-display (add poly8 poly11))(newline)
+;(beautiful-display poly11)
 
 ;(display (add (make-polynomial 'x (list (make-term 0 (make-integer-number 2))))
               ;(make-polynomial 'x (list (make-term 0 (make-integer-number 4))))))

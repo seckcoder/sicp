@@ -5,7 +5,8 @@
           type-tag contents attach-tag apply-generic myraise
           square
           inherit! build-tower!
-          add sub mul divide equ? =zero? dropif
+          add sub mul divide equ? =zero? dropif beautiful-display
+          isinteger? equal-int1?
           )
   (import (rnrs)
           (rnrs mutable-pairs)
@@ -155,6 +156,7 @@
   (define (divide x y) (apply-generic 'div x y))
   (define (equ? x y) (apply-generic 'equ? x y))
   (define (make-zero type-tag) (get 'zero type-tag))
+  (define (beautiful-display x) ((get 'display (type-tag x)) (contents x)))
   (define (=zero? x)
     (let ((equal-zero-proc (get '=zero? (type-tag x))))
       ; if the type has defined =zero?, we will use it.
@@ -162,6 +164,14 @@
       (if equal-zero-proc
         (equal-zero-proc (contents x))
         (equ? x (make-zero (type-tag x))))))
+
+  (define (isinteger? x)
+    (eq? (type-tag x) 'integer))
+
+  (define (equal-int1? x)
+    (let ((dropped-x (dropif x)))
+      (and (isinteger? x)
+           (= (contents x) 1))))
 
   (define (dropif x)
     (if (get 'project (type-tag x))

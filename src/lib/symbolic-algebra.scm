@@ -33,6 +33,42 @@
                                            (terms p2)))
         (error 'mul-poly "VARIABLES ARE NOT THE SAME")))
 
+    (define (beautiful-display-polynomial p)
+      (if (not (empty-termlist? (terms p)))
+        (begin
+          (display "(")
+          (beautiful-display-terms (variable p) (terms p))
+          (display ")"))))
+
+    (define (beautiful-display-terms variable termlst)
+      (if (not (empty-termlist? termlst))
+        (begin
+          (let ((p-first-term (first-term termlst))
+                (p-rest-terms (rest-terms termlst)))
+            (beautiful-display-term variable p-first-term)
+            (if (not (empty-termlist? p-rest-terms))
+              (begin
+                (display "+")
+                (beautiful-display-terms variable p-rest-terms))))
+          )))
+
+    (define (beautiful-display-term variable term)
+      ; beautiful-display-term-coeff
+      (let ((term-coeff (coeff term))
+            (term-order (order term)))
+        (cond ((=zero? term-coeff)
+               (display 0))
+              ((zero? term-order)
+               (beautiful-display term-coeff))
+              (else (begin
+                      (if (not (equal-int1? term-coeff))
+                        (beautiful-display term-coeff))
+                      (display variable)
+                      (if (> term-order 1)
+                        (begin
+                          (display "^")
+                          (display term-order))))))))
+
     (define (equ? p1 p2)
       (and (= (order p1)
               (order p2))
@@ -125,6 +161,7 @@
     (put 'mul '(polynomial polynomial) (compose tag mul-poly))
     (put 'make 'polynomial (compose tag make-polynomial-inner))
     (put '=zero? 'polynomial polynomial-equal-zero?)
+    (put 'display 'polynomial beautiful-display-polynomial)
     )
 
   (define (make-polynomial var terms)
