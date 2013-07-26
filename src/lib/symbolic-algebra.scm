@@ -139,19 +139,35 @@
                                             (rest-terms L2))))))
       )
 
+    ; Not ues fold-right here since fold-right have an assumption 
+    ; on the representation of terms(first-term = car)
     (define (mult-terms L1 L2)
-      (fold-right add-terms
-                  (the-empty-termlist)
-                  (map (lambda (t1)
-                         (mult-term-terms t1 L2)) L1)))
+      (if (empty-termlist? L1)
+        (the-empty-termlist)
+        (add-terms (mult-term-terms (first-term L1) L2)
+                   (mult-terms (rest-terms L1) L2))))
 
-    ; multiply a term with a list of terms
     (define (mult-term-terms t termlst)
-      (map (lambda (t1)
-             (mult-term t t1)) termlst))
+      (if (empty-termlist? termlst)
+        (the-empty-termlist)
+        (adjoin-term (mult-term t (first-term termlst))
+                     (mult-term-terms t (rest-terms termlst)))))
+
+;    (define (mult-terms L1 L2)
+      ;(fold-right add-terms
+                  ;(the-empty-termlist)
+                  ;(map (lambda (t1)
+                         ;(mult-term-terms t1 L2)) L1)))
+
+    ;; multiply a term with a list of terms
+    ;(define (mult-term-terms t termlst)
+      ;(map (lambda (t1)
+             ;(mult-term t t1)) termlst))
 
     (define (the-empty-termlist) '());
     (define (empty-termlist? L) (null? L));
+
+    ; order of t should be greater than all the term in termlst
     (define (adjoin-term t termlst)
       (if (=zero? (coeff t))
         termlst
@@ -170,10 +186,6 @@
         (error 'add-term "ORDER IS NOT EQUAL")))
     ; mult two terms
     (define (mult-term t1 t2)
-      ;(beautiful-display-term 'x t1)(newline)
-      ;(beautiful-display-term 'x t2)(newline)
-      ;(display (coeff t1))(newline)
-      ;(display (coeff t2))
       (make-term (+ (order t1)
                     (order t2))
                  (mul (coeff t1)
