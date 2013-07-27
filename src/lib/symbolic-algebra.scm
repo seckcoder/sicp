@@ -5,11 +5,13 @@
           make-term
           variable
           terms
+          test-symbolic-algebra
           )
   (import (rnrs)
           (base)
           (functional)
           (generic-arithmetic)
+          (utils)
           )
 
   (define (make-term order coeff) (cons coeff order))
@@ -89,17 +91,16 @@
                         (display term-order))))))))
 
   ;(define (equ? p1 p2)
-    ;(and (= (order p1)
-            ;(order p2))
-         ;(equ? (coeff p1)
-               ;(coeff p2))))
+  ;(and (= (order p1)
+  ;(order p2))
+  ;(equ? (coeff p1)
+  ;(coeff p2))))
 
   (define (polynomial-equal-zero? p)
     (let ((p-terms (terms p)))
       (and (not (empty-termlist? p-terms))
            (=zero? (coeff (first-term p-terms)))))
     )
-
 
   (define (display-terms termlst)
     (if (not (empty-termlist? termlst))
@@ -114,9 +115,9 @@
 
   ; terms are ordered by order desc.
   (define (add-terms L1 L2)
-    ;     (display-terms L1)
-    ;(display-terms L2)
-    ;(display "***")(newline)
+    ;(display "add-terms")(newline)
+    ;(display L1)(newline)
+    ;(display L2)(newline)
     (cond ((empty-termlist? L1) L2)
           ((empty-termlist? L2) L1)
           ((> (order (first-term L1))
@@ -143,8 +144,9 @@
   (define (mult-terms L1 L2)
     (if (empty-termlist? L1)
       (the-empty-termlist)
-      (add-terms (mult-term-terms (first-term L1) L2)
-                 (mult-terms (rest-terms L1) L2))))
+      (begin
+        (add-terms (mult-term-terms (first-term L1) L2)
+                   (mult-terms (rest-terms L1) L2)))))
 
   (define (mult-term-terms t termlst)
     (if (empty-termlist? termlst)
@@ -175,7 +177,7 @@
   (define (adjoin-term t termlst)
     (define (cons-term)
       (cons (coeff t) (adjoin-term (make-term (- (order t) 1)
-                                              0)
+                                              (make-integer-number 0))
                                    termlst)))
     (cond ((and (empty-termlist? termlst)
                 (zero? (order t)))
@@ -192,14 +194,13 @@
                            (order termlst-ft))
                         1)
                      (cons-term))
-                    (else
-                      (error 'adjoin-term "ORDER OF TS NOT RIGHT" t)))))))
+                    (else termlst))))))
 
   ;(define (first-term termlst) (car termlst))
   ;(define (rest-terms termlst) (cdr termlst))
   (define (first-term termlst) (make-term (- (length termlst) 1)
                                           (car termlst)))
-  (define (rest-terms termlst) (car termlst))
+  (define (rest-terms termlst) (cdr termlst))
   (define (order term) (cdr term))
   (define (coeff term) (car term))
   ; add term that has the same order
@@ -232,4 +233,11 @@
   (define (make-polynomial var terms)
     ((get 'make 'polynomial) var terms))
 
+  (define (test-symbolic-algebra)
+    (define poly13 
+      (make-polynomial 'x (make-integer-numbers '(1 2 0 3 -2 -5))))
+    (define poly1
+      (make-polynomial 'x (make-integer-numbers '(1 2))))
+    (beautiful-display (mul poly13 poly1))
+    )
   )

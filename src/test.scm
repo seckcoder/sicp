@@ -100,3 +100,5 @@
 
 
 ;(beautiful-display (add poly5 poly6))
+
+(test-symbolic-algebra)

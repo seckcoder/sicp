@@ -4,7 +4,8 @@
   (export square
           set-cadr!
           set-caddr!
-          inlist?)
+          inlist?
+          range)
   (import (rnrs)
           (rnrs mutable-pairs))
   (define (set-cadr! lst v)
@@ -22,4 +23,9 @@
                 lst)
       #t
       #f))
+
+  (define (range a b)
+    (cond ((= a b) '())
+          ((> a b) (cons a (range (- a 1) b)))
+          ((< a b) (cons a (range a (- b 1))))))
   )

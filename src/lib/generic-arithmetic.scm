@@ -5,6 +5,7 @@
           install-real-package
           install-complex-package
           make-integer-number
+          make-integer-numbers
           make-real-number
           make-rational-number
           make-complex-from-real-imag
@@ -19,6 +20,10 @@
 
   (define (make-integer-number n)
     ((get 'make 'integer) n))
+
+  (define (make-integer-numbers list-of-n)
+    (map make-integer-number list-of-n))
+
   (define (make-real-number n)
     ((get 'make 'real) n))
 
