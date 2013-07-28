@@ -4,8 +4,9 @@
           make-polynomial
           make-term
           variable
-          terms
           test-symbolic-algebra
+          add-terms
+          mult-terms
           )
   (import (rnrs)
           (base)
@@ -145,7 +146,7 @@
     )
 
   (define (make-polynomial var terms)
-    ((get 'make 'polynomial) var terms))
+    ((get-or-fail 'make 'polynomial) var terms))
 
   (define (test-symbolic-algebra)
     (define poly13 

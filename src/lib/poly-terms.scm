@@ -28,7 +28,8 @@
       (cond ((=zero? term-coeff)
              (display 0))
             ((zero? term-order)
-             (beautiful-display term-coeff))
+             (begin
+               (beautiful-display term-coeff)))
             (else (begin
                     (if (not (equal-int1? term-coeff))
                       (beautiful-display term-coeff))
@@ -108,8 +109,8 @@
 
     (define (tag termlst) (attach-tag 'dense termlst))
     (put 'first-term '(dense) first-term)
-    (put 'rest-terms '(dense) rest-terms)
-    (put 'adjoin-term 'dense adjoin-term)
+    (put 'rest-terms '(dense) (compose tag rest-terms))
+    (put 'adjoin-term 'dense (compose tag adjoin-term))
     (put 'the-empty-termlist 'dense (compose tag the-empty-termlist))
     (put 'empty-termlist? 'dense empty-termlist?)
     (put 'make 'dense (compose tag make-dense-terms)))
@@ -119,9 +120,9 @@
   (define (rest-terms termlst)
     (apply-generic 'rest-terms termlst))
   (define (adjoin-term t termlst)
-    ((get 'adjoin-term (type-tag termlst)) t (contents termlst)))
+    ((get-or-fail 'adjoin-term (type-tag termlst)) t (contents termlst)))
   (define (empty-termlist? termlst)
-    ((get 'empty-termlist? (type-tag termlst)) (contents termlst)))
+    ((get-or-fail 'empty-termlist? (type-tag termlst)) (contents termlst)))
   (define (make-termlist type . args)
-    (apply (get 'make type) args))
+    (apply (get-or-fail 'make type) args))
   )
