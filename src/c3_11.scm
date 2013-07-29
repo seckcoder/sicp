@@ -1,1 +1,1 @@
-; 略
+; in queue.scm: beautiful-display-queue
