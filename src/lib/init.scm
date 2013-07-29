@@ -19,7 +19,7 @@
     (install-rational-package)
     (install-complex-package)
     (install-polynomial-package)
-    (install-coercion)
+    ;(install-coercion)
     (install-sparse-poly-terms-package)
     (install-dense-poly-terms-spackage)
     (build-tower!)

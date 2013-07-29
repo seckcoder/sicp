@@ -45,6 +45,6 @@
 (define poly11 (make-polynomial 'x (make-termlist 'dense (list (make-term 1 poly9)
                                                                 (make-term 0 poly10)))))
 
-(mul poly8 poly11)
+;(trace mul)
+;(mul poly8 poly11)
 ;(beautiful-display (mul poly8 poly11))
-
