@@ -1,7 +1,7 @@
 ; type system. For historical reason, this file is named base.
 (library
   (base)
-  (export operation-table get put
+  (export operation-table get get-or-fail put
           coercion-table get-coercion put-coercion
           type-tag contents attach-tag apply-generic myraise
           square
@@ -18,6 +18,11 @@
   ; operation table
   (define operation-table (make-table))
   (define get (operation-table 'lookup-proc))
+  (define (get-or-fail . args)
+    (let ((proc (apply get args)))
+      (if proc
+        proc
+        (error 'get-or-fail "CANNOT FIND" args))))
   (define put (operation-table 'insert-proc!))
 
   ; coercion table
@@ -138,7 +143,6 @@
     (let ((lowest (type-tower-lowest)))
       (update-type-precedence-bottom-up lowest 0)))
 
-
   (define (apply-generic-type-tower op . args)
     ; args corresponding to the args of op
     (let ((type-tags (map type-tag args)))
@@ -183,16 +187,17 @@
             (error-msg))
           )
         )))
-  (define (myraise x) ((get 'raise (type-tag x)) (contents x)))
-  (define (project x) ((get 'project (type-tag x)) (contents x)))
+  (define (myraise x) 
+    ((get-or-fail 'raise (type-tag x)) (contents x)))
+  (define (project x) ((get-or-fail 'project (type-tag x)) (contents x)))
   (define (add x y) (apply-generic 'add x y))
   (define (sub x y) (apply-generic 'sub x y))
   (define (mul x y) (apply-generic 'mul x y))
   (define (divide x y) (apply-generic 'div x y))
-  (define (negate x) ((get 'negate (type-tag x)) (contents x)))
+  (define (negate x) ((get-or-fail 'negate (type-tag x)) (contents x)))
   (define (equ? x y) (apply-generic 'equ? x y))
   (define (make-zero type-tag) (get 'zero type-tag))
-  (define (beautiful-display x) ((get 'display (type-tag x)) (contents x)))
+  (define (beautiful-display x) ((get-or-fail 'display (type-tag x)) (contents x)))
   (define (=zero? x)
     (let ((equal-zero-proc (get '=zero? (type-tag x))))
       ; if the type has defined =zero?, we will use it.
