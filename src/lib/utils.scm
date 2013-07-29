@@ -5,9 +5,9 @@
           set-cadr!
           set-caddr!
           inlist?
-          range)
-  (import (rnrs)
-          (rnrs mutable-pairs))
+          range
+          random-in-range)
+  (import (chezscheme))
   (define (set-cadr! lst v)
     (set-car! (cdr lst) v))
 
@@ -24,8 +24,14 @@
       #t
       #f))
 
+  ; [a b)
   (define (range a b)
     (cond ((= a b) '())
           ((> a b) (cons a (range (- a 1) b)))
           ((< a b) (cons a (range a (- b 1))))))
+  
+  ; [low high)
+  (define (random-in-range low high)
+    (let ((range (- high low)))
+      (+ low (random range))))
   )
