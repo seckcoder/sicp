@@ -1,50 +1,47 @@
-(import (rnrs)
-        (base)
-        (complex)
-        (init)
-        (functional)
-        (generic-arithmetic)
-        (symbolic-algebra)
-        (coercion)
-        (dict)
-        (poly-terms)
-        )
+(define (make-queue)
+  (let ((front-ptr '())
+        (rear-ptr '()))
+    (define (make-q) (cons front-ptr rear-ptr))
+    (define (front-queue)
+      (if (empty-queue?)
+        (error 'front-queue "FRONT CALLED WITH AN EMPTY QUEUE")
+        (car front-ptr)))
+    (define (empty-queue?) (null? front-ptr))
+    (define (set-front-ptr! new-pair)
+      (set! front-ptr new-pair))
+    (define (set-rear-ptr! new-pair)
+      (set! rear-ptr new-pair))
+    (define (insert-queue! item)
+      (let ((new-pair (cons item '())))
+        (cond ((empty-queue?)
+               (set-front-ptr! new-pair)
+               (set-rear-ptr! new-pair)
+               (make-q))
+              (else
+                (set-cdr! rear-ptr new-pair)
+                (set-rear-ptr! new-pair)
+                (make-q)))))
+    (define (delete-queue!)
+      (cond ((empty-queue?)
+             (error 'delete-queue! "DELETE EMPTY QUEUE"))
+            (else
+              (set-front-ptr! (cdr front-ptr))
+              (make-q))))
+    (define (beautiful-display-queue)
+      (define (recur ptr)
+        (if (not (null? ptr))
+          (begin
+            (display (car ptr))
+            (display "-")
+            (recur (cdr ptr)))))
+      (recur front-ptr))
+    (define (dispatch m)
+      (cond ((eq? m 'insert) insert-queue!)
+            ((eq? m 'delete) delete-queue!)
+            ((eq? m 'display) beautiful-display-queue)
+            (else
+              (error 'queue-dispatch "UNKNOWN ACTION" m))))
+    dispatch))
 
-(init)
-
-(define poly5 (make-polynomial 'y (make-termlist 'sparse (list (make-term 1
-                                                                          (make-integer-number 1))
-                                                               (make-term 0
-                                                                          (make-integer-number 1))))))
-
-(define poly6 (make-polynomial 'y (make-termlist 'sparse (list (make-term 2
-                                                                          (make-integer-number 1))
-                                                               (make-term 0
-                                                                          (make-integer-number 1))))))
-
-(define poly7 (make-polynomial 'y (make-termlist 'sparse (list (make-term 1
-                                                                          (make-integer-number 1))
-                                                               (make-term 0
-                                                                          (make-integer-number -1))))))
-
-
-(define poly8
-  (make-polynomial 'x (make-termlist 'sparse (list (make-term 2 poly5)
-                                                   (make-term 1 poly6)
-                                                   (make-term 0 poly7)))))
-
-(define poly9 (make-polynomial 'y (make-termlist 'sparse (list (make-term 1
-                                                                          (make-integer-number 1))
-                                                               (make-term 0
-                                                                          (make-integer-number -2))))))
-(define poly10 (make-polynomial 'y (make-termlist 'dense (list (make-term 3
-                                                                           (make-integer-number 1))
-                                                                (make-term 0
-                                                                           (make-integer-number 7))))))
-
-(define poly11 (make-polynomial 'x (make-termlist 'dense (list (make-term 1 poly9)
-                                                                (make-term 0 poly10)))))
-
-(mul poly8 poly11)
-;(beautiful-display (mul poly8 poly11))
-
+(define q (make-queue))
+(display ((q 'insert) 3))
