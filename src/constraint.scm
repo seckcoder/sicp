@@ -80,9 +80,9 @@
             'ignore)))
 
   (define (on-lost-value)
-    (set-lost-value! s)
-    (set-lost-value! a2)
-    (set-lost-value! a1)
+    (set-lost-value! s self)
+    (set-lost-value! a2 self)
+    (set-lost-value! a1 self)
     (on-new-value))
   (define (self msg)
     (cond ((eq? msg 'on-new-value) (on-new-value))
@@ -117,9 +117,9 @@
           (else
             'ignore)))
   (define (on-lost-value)
-    (set-lost-value! s)
-    (set-lost-value! a2)
-    (set-lost-value! a1)
+    (set-lost-value! p self)
+    (set-lost-value! m2 self)
+    (set-lost-value! m1 self)
     (on-new-value))
 
   (define (self msg)
@@ -148,7 +148,7 @@
     )
   (define (on-lost-value)
     (display name)
-    (display " lost value: ")
+    (display " lost value")
     (newline)
     )
   (define (self msg)
@@ -191,6 +191,7 @@
   (make-probe "Celsius temp" C)
   (make-probe "Fahrenheit temp" F)
   (set-new-value! C 25 'user)
+  (set-lost-value! C 'user)
   )
 
 (test-cf-converter)
