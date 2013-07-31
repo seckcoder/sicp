@@ -6,31 +6,32 @@
 
 (define (make-connector)
   (let ((value '())
-        (constraints '()))
+        (constraints '())
+        (informant '()))
     (define (has-value)
       (not (null? value)))
 
-    (define (set-new-value! new-value informant)
+    (define (set-new-value! new-value setter)
       (cond ((not (has-value))
              (set! value new-value)
-             (for-each-except informant
+             (set! informant setter)
+             (for-each-except setter
                               on-new-value
                               constraints))
-            ((and (has-value)
-                  (not (= value new-value)))
+            ((not (= value new-value))
              (error 'set-new-value "CONFLICT NEWVALUE" new-value))
             (else
               'ignore)
             ))
 
-    (define (set-lost-value! informant)
-      (cond ((not (has-value))
-             (error 'set-lost-value! "NO VALUE"))
-            (else
-              (set! value '())
-              (for-each-except informant
-                               on-lost-value
-                               constraints))))
+    (define (set-lost-value! retractor)
+      ; only accept request from the original informant
+      (if (eq? retractor informant)
+        (begin (set! informant '())
+               (for-each-except retractor
+                                on-lost-value
+                                constraints))
+        'ignored))
 
     (define (connect constraint)
       (set! constraints (cons constraint constraints)))
@@ -77,8 +78,15 @@
                                  (get-value a2)) self))
           (else
             'ignore)))
+
+  (define (on-lost-value)
+    (set-lost-value! s)
+    (set-lost-value! a2)
+    (set-lost-value! a1)
+    (on-new-value))
   (define (self msg)
     (cond ((eq? msg 'on-new-value) (on-new-value))
+          ((eq? msg 'on-lost-value) (on-lost-value))
           (else
             (error 'adder-self "UNKNOWN MESSAGE" msg))))
 
@@ -108,9 +116,15 @@
                                  (get-value m2)) self))
           (else
             'ignore)))
+  (define (on-lost-value)
+    (set-lost-value! s)
+    (set-lost-value! a2)
+    (set-lost-value! a1)
+    (on-new-value))
 
   (define (self msg)
     (cond ((eq? msg 'on-new-value) (on-new-value))
+          ((eq? msg 'on-lost-value) (on-lost-value))
           (else
             (error 'multiplier-self "UNKNOWN MESSAGE" msg))))
   (connect m1 self)
