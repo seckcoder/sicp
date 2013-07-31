@@ -135,8 +135,8 @@
 (define (make-constant constant connector)
   (define (self msg)
     (error 'constant-self "UNKNOWN MESSAGE" msg))
-  (set-new-value! connector constant self)
   (connect connector self)
+  (set-new-value! connector constant self)
   self)
 
 (define (make-probe name connector)
@@ -166,7 +166,6 @@
   (constraint 'on-lost-value))
 
 
-
 (define (make-squarer a b)
   (make-multiplier a a b))
 
@@ -175,7 +174,9 @@
         (b (make-connector)))
     (make-squarer a b)
     (make-probe 'a a)
-    (set-new-value! b 9 'user) ; we cannot get a from b
+    ; we cannot get a from b. different from multiplier, we can know a when we
+    ; only know b.
+    (set-new-value! b 9 'user)
     ; besides, when we set a, the on-new-value procedure will be called twice.
     ; But this seems will not cause any serious problem...
     ))

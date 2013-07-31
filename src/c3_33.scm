@@ -135,8 +135,8 @@
 (define (make-constant constant connector)
   (define (self msg)
     (error 'constant-self "UNKNOWN MESSAGE" msg))
-  (set-new-value! connector constant self)
   (connect connector self)
+  (set-new-value! connector constant self)
   self)
 
 (define (make-probe name connector)

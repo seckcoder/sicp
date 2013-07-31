@@ -34,7 +34,16 @@
         'ignored))
 
     (define (connect constraint)
-      (set! constraints (cons constraint constraints)))
+      (if (not (memq constraint constraints))
+        (set! constraints (cons constraint constraints)))
+      ; if the contraint already has value, then we
+      ; call it's on-new-value.
+      ; For the case: (c* (cv 6) (cv 5)).
+      ; When call c*, connect to (cv 6) or (cv 5), the on-new-value
+      ; will be called.
+      (if (has-value)
+        (on-new-value constraint))
+      'done)
 
     (define (dispatch m)
       (cond ((eq? m 'set-new-value) set-new-value!)
@@ -62,6 +71,8 @@
 (define (set-lost-value! connector informant)
   ((connector 'set-lost-value) informant))
 
+; Note those makers here is a little special. We actually don't
+; need to return self(since we alread connect it with a1/a2/s).
 (define (make-adder a1 a2 s)
   (define (on-new-value)
     (cond ((and (has-value a1)
@@ -135,8 +146,11 @@
 (define (make-constant constant connector)
   (define (self msg)
     (error 'constant-self "UNKNOWN MESSAGE" msg))
-  (set-new-value! connector constant self)
+  ; Note the order here is important. Otherwise,
+  ; there maybe bugs: (c* (cv 4) (cv 3))
+  ; Here, c*'s on-new-value will not be called if the order is reversed.
   (connect connector self)
+  (set-new-value! connector constant self)
   self)
 
 (define (make-probe name connector)
@@ -165,9 +179,6 @@
 (define (on-lost-value constraint)
   (constraint 'on-lost-value))
 
-(define (parse formula)
-  (cond ((null? formula) '())))
-
 
 (define (celsius-fahrenheit-converter c f)
   (let ((u (make-connector))
@@ -193,5 +204,3 @@
   (set-new-value! C 25 'user)
   (set-lost-value! C 'user)
   )
-
-(test-cf-converter)
