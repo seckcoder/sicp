@@ -4,6 +4,7 @@
           empty-queue?
           insert-queue!
           delete-queue!
+          front-queue
           beautiful-display-queue)
   (import (chezscheme))
 
