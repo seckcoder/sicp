@@ -5,10 +5,18 @@
           make-multiplier
           make-constant
           make-probe
+          make-squarer
           set-new-value!
-          get-value)
+          get-value
+          print-connector
+          c*
+          c/
+          c+
+          csquare
+          cv)
   (import (rnrs)
           (rnrs mutable-pairs)
+          (utils)
           )
 
   (define (for-each-except excluded1 action included)
@@ -186,35 +194,64 @@
     (connect connector self)
     self)
 
+  ; a^2 = b
+  (define (make-squarer a b)
+    (define (on-new-value)
+      (cond ((has-value a)
+             (set-new-value! b (square (get-value a)) self))
+            ((has-value b)
+             (set-new-value! a (sqrt (get-value b)) self))
+            (else
+              'ignore)))
+    (define (on-lost-value)
+      (set-lost-value! b self)
+      (set-lost-value! a self)
+      (on-new-value))
+    (define (self msg)
+      (cond ((eq? msg 'on-new-value) (on-new-value))
+            ((eq? msg 'on-lost-value) (on-lost-value))
+            (else
+              (error 'squarer-self "UNKNOWN MESSAGE" msg))))
+    (connect a self)
+    (connect b self)
+    self)
+
   (define (on-new-value constraint)
     (constraint 'on-new-value))
 
   (define (on-lost-value constraint)
     (constraint 'on-lost-value))
 
+  (define (print-connector c)
+    (display (get-value c))(newline))
 
-  (define (celsius-fahrenheit-converter c f)
-    (let ((u (make-connector))
-          (v (make-connector))
-          (w (make-connector))
-          (x (make-connector))
-          (y (make-connector)))
-      (make-multiplier c w u)
-      (make-multiplier v x u)
-      (make-adder v y f)
-      (make-constant 9 w)
-      (make-constant 5 x)
-      (make-constant 32 y)
-      'ok))
+  (define (c+ x y)
+    (let ((z (make-connector)))
+      (make-adder x y z)
+      z))
 
+  (define (c* x y)
+    (let ((z (make-connector)))
+      (make-multiplier x y z)
+      z))
 
-  (define (test-cf-converter)
-    (define C (make-connector))
-    (define F (make-connector))
-    (celsius-fahrenheit-converter C F)
-    (make-probe "Celsius temp" C)
-    (make-probe "Fahrenheit temp" F)
-    (set-new-value! C 25 'user)
-    (set-lost-value! C 'user)
-    )
+  (define (cv constant)
+    (let ((c (make-connector)))
+      (make-constant constant c)
+      c))
+
+  (define (c/ x y)
+    (let ((z (make-connector)))
+      (make-multiplier y z x)
+      z))
+
+  (define (csquare a)
+    (let ((b (make-connector)))
+      (make-squarer a b)
+      b))
+
+  (define (celsius-fahrenheit-converter x)
+    (c+ (c* (c/ (cv 9) (cv 5))
+            x)
+        (cv 32)))
   )
