@@ -1,3 +1,4 @@
+; implemention in lib/constraint.scm
 (import (constraint))
 
 (define (print-connector c)
