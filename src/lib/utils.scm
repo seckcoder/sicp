@@ -6,7 +6,8 @@
           set-caddr!
           inlist?
           range
-          random-in-range)
+          random-in-range
+          sleepfor)
   (import (chezscheme))
   (define (set-cadr! lst v)
     (set-car! (cdr lst) v))
@@ -34,4 +35,8 @@
   (define (random-in-range low high)
     (let ((range (- high low)))
       (+ low (random range))))
+
+  ; sleep for s seconds
+  (define (sleepfor s)
+    (sleep (make-time 'time-duration 0 s)))
   )
