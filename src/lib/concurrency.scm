@@ -25,17 +25,16 @@
         (let ((block? (if (null? args)
                         #t
                         (car args))))
-          (cond ((= n 0)
-                 (if block?
-                   (acquire)
-                   #f))
-                ((> n 0)
-                 (mutex-acquire mutex)
-                 (set! n (- n 1))
-                 (mutex-release mutex)
-                 #t)
-                (else
-                  (error 'semaphore-acquire "n < 0")))
+          ; Note n's if test should be protected by mutex.
+          (mutex-acquire mutex)
+          (if (> n 0)
+            (begin (set! n (- n 1))
+                   (mutex-release mutex)
+                   #t)
+            (begin (mutex-release mutex)
+                   (if block?
+                     (acquire)
+                     #f)))
           ))
       (define (release)
         (mutex-acquire mutex)
