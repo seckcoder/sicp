@@ -53,4 +53,26 @@
 
   (define (semaphore-release sem)
     (sem 'release))
+
+  ; a not practical implementation of test-and-set!
+  (define (test-and-set! cell)
+    (if (car cell)
+      #t
+      (begin (set-car! cell #t)
+             #f)))
+
+  (define (clear! cell)
+    (set-car! cell #f))
+
+  (define (mutex-test-and-set-impl)
+    (define (make-mutex)
+      (let ((cell (list #f)))
+        (define (self msg)
+          (cond ((eq? msg 'acquire)
+                 (if (test-and-set! cell)
+                   (self 'acquire)
+                   #t))
+                ((eq? msg 'release)
+                 (clear! cell))))
+        self)))
   )

@@ -7,5 +7,4 @@
 
 (define sem (make-semaphore 2))
 
-
 (display (apply-n semaphore-acquire (list sem #f) 3))
