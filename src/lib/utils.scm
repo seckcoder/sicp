@@ -8,7 +8,8 @@
           range
           random-in-range
           sleepfor
-          divides?)
+          divides?
+          println)
   (import (chezscheme))
   (define (set-cadr! lst v)
     (set-car! (cdr lst) v))
@@ -43,4 +44,6 @@
   (define (divides? a b)
     (= (remainder b a) 0))
 
+  (define (println v)
+    (display v)(newline))
   )
