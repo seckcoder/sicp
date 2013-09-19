@@ -1,7 +1,8 @@
 (library
   (functional)
   (export compose
-          compose-n)
+          compose-n
+          enumerate-interval)
   (import (rnrs))
   (define (compose f g)
     (lambda (arg0 . rest)
@@ -15,4 +16,9 @@
               (else
                 'ok)))
       (recur n)))
+
+  (define (enumerate-interval low high)
+    (if (> low high)
+      '()
+      (cons low (enumerate-interval (+ 1 low) high))))
   )
