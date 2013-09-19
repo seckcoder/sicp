@@ -45,5 +45,6 @@
     (= (remainder b a) 0))
 
   (define (println v)
-    (display v)(newline))
+    (display v)(newline)
+    v)
   )

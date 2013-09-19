@@ -8,7 +8,8 @@
           stream-map
           stream-filter
           stream-enumerate-interval
-          stream-display)
+          stream-display
+          stream-ref)
 
   (import (rnrs)
           (utils))
@@ -87,4 +88,12 @@
       (begin
         (println (stream-car s))
         (stream-display (stream-cdr s)))))
+
+  (define (stream-ref s n)
+    (define (iter s-remained i)
+      (if (= i n)
+        (stream-car s-remained)
+        (iter (stream-cdr s-remained) (+ i 1))))
+    (iter s 0))
+
   )
