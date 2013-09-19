@@ -30,6 +30,7 @@
     (syntax-rules ()
       ((cons-stream a b)
        (cons a (memo-proc (lambda () b))))))
+       ;(cons a (lambda () b)))))
 
   (define-syntax list-stream
     (syntax-rules ()
