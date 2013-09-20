@@ -15,9 +15,11 @@
           stream-scale
           integers-start-from
           stream-mult
+          stream-div
           partial-sum
           integers
-          stream-display-n)
+          stream-display-n
+          negate)
 
   (import (rnrs)
           (utils))
@@ -38,7 +40,7 @@
     (syntax-rules ()
       ((cons-stream a b)
        (cons a (memo-proc (lambda () b))))))
-  ;(cons a (lambda () b)))))
+       ;(cons a (lambda () b)))))
 
   (define-syntax list-stream
     (syntax-rules ()
@@ -95,14 +97,14 @@
   (define (stream-display s)
     (if (not (stream-null? s))
       (begin
-        (println (stream-car s))
+        (display (stream-car s))(display " ")
         (stream-display (stream-cdr s)))))
 
   (define (stream-display-n s n)
     (define (iter s i)
       (if (< i n)
         (begin
-          (println (stream-car s))
+          (display (stream-car s))(display " ")
           (iter (stream-cdr s) (+ i 1)))))
     (iter s 0))
 
@@ -125,9 +127,14 @@
   (define (stream-mult s1 s2)
     (stream-map * s1 s2))
 
+  (define (stream-div s1 s2)
+    (stream-map / s1 s2))
+
   (define ones
     (cons-stream 1 ones))
 
+  (define negative-ones
+    (cons-stream -1 negative-ones))
 
   (define integers
     (cons-stream 1 (stream-add ones integers)))
@@ -137,4 +144,8 @@
                              (stream-add (stream-cdr s)
                                          sum)))
     sum)
+
+  (define (negate s)
+    (stream-mult negative-ones
+                 s))
   )
