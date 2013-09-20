@@ -4,6 +4,7 @@
           list-stream
           stream-car
           stream-cdr
+          stream-null?
           the-empty-stream
           stream-map
           stream-filter
@@ -13,7 +14,10 @@
           stream-add
           stream-scale
           integers-start-from
-          stream-mult)
+          stream-mult
+          partial-sum
+          integers
+          stream-display-n)
 
   (import (rnrs)
           (utils))
@@ -94,6 +98,14 @@
         (println (stream-car s))
         (stream-display (stream-cdr s)))))
 
+  (define (stream-display-n s n)
+    (define (iter s i)
+      (if (< i n)
+        (begin
+          (println (stream-car s))
+          (iter (stream-cdr s) (+ i 1)))))
+    (iter s 0))
+
   (define (stream-ref s n)
     (define (iter s-remained i)
       (if (= i n)
@@ -112,4 +124,17 @@
 
   (define (stream-mult s1 s2)
     (stream-map * s1 s2))
+
+  (define ones
+    (cons-stream 1 ones))
+
+
+  (define integers
+    (cons-stream 1 (stream-add ones integers)))
+
+  (define (partial-sum s)
+    (define sum (cons-stream (stream-car s)
+                             (stream-add (stream-cdr s)
+                                         sum)))
+    sum)
   )
