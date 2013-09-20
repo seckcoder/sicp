@@ -9,6 +9,7 @@
           random-in-range
           sleepfor
           divides?
+          divisible? 
           println)
   (import (chezscheme))
   (define (set-cadr! lst v)
@@ -43,6 +44,9 @@
     (sleep (make-time 'time-duration 0 s)))
   (define (divides? a b)
     (= (remainder b a) 0))
+
+  (define (divisible? x y)
+    (= (remainder x y) 0))
 
   (define (println v)
     (display v)(newline)

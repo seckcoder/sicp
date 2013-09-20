@@ -24,6 +24,9 @@ var cdr = exports.cdr = function (s) {
     return s.cdr().apply();
 };
 
+var ref = exports.ref = function (s, n) {
+};
+
 var range = exports.range = function (low, high) {
     if (low > high) {
         return empty;
@@ -34,4 +37,16 @@ var range = exports.range = function (low, high) {
     }
 };
 
-console.log(car(cdr(range(2, 4))));
+function integersStartFrom(n) {
+    return cons(n, function () {
+        return integersStartFrom(n + 1);
+    });
+};
+
+function fibgen (a, b) {
+    return cons(a, function () {
+        return fibgen(b, a + b);
+    });
+};
+
+var fibs = fibgen(0, 1);

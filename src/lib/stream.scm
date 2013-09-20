@@ -9,7 +9,11 @@
           stream-filter
           stream-enumerate-interval
           stream-display
-          stream-ref)
+          stream-ref
+          stream-add
+          stream-scale
+          integers-start-from
+          stream-mult)
 
   (import (rnrs)
           (utils))
@@ -30,7 +34,7 @@
     (syntax-rules ()
       ((cons-stream a b)
        (cons a (memo-proc (lambda () b))))))
-       ;(cons a (lambda () b)))))
+  ;(cons a (lambda () b)))))
 
   (define-syntax list-stream
     (syntax-rules ()
@@ -97,4 +101,15 @@
         (iter (stream-cdr s-remained) (+ i 1))))
     (iter s 0))
 
+  (define (stream-add s1 s2)
+    (stream-map + s1 s2))
+
+  (define (stream-scale s factor)
+    (stream-map (lambda (x) (* x factor)) s))
+
+  (define (integers-start-from n)
+    (cons-stream n (integers-start-from (+ n 1))))
+
+  (define (stream-mult s1 s2)
+    (stream-map * s1 s2))
   )
