@@ -21,7 +21,8 @@
           integers
           stream-display-n
           stream-negate
-          one-zeros)
+          one-zeros
+          interleave)
 
   (import (rnrs)
           (utils))
@@ -40,16 +41,16 @@
 
   (define-syntax cons-stream
     (syntax-rules ()
-      ((cons-stream a b)
-       (cons a (memo-proc (lambda () b))))))
-       ;(cons a (lambda () b)))))
+                  ((cons-stream a b)
+                   (cons a (memo-proc (lambda () b))))))
+  ;(cons a (lambda () b)))))
 
   (define-syntax list-stream
     (syntax-rules ()
-      [(_) the-empty-stream]
-      [(_ a b ...)
-       (cons-stream a
-                    (list-stream b ...))]))
+                  [(_) the-empty-stream]
+                  [(_ a b ...)
+                   (cons-stream a
+                                (list-stream b ...))]))
 
   (define (stream-car stream) (car stream))
 
@@ -159,4 +160,12 @@
   (define (stream-negate s)
     (stream-mult negative-ones
                  s))
+
+  ; interleave two streams
+  (define (interleave s1 s2)
+    (if (stream-null? s1)
+      s2
+      (cons-stream (stream-car s1)
+                   (interleave s2
+                               (stream-cdr s1)))))
   )
