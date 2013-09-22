@@ -4,19 +4,16 @@
         (prime))
 
 
-(define (pairs-base s t interleave)
+(define (pairs s t)
   (let ((s0 (stream-car s))
         (t0 (stream-car t)))
     (cons-stream (list s0 t0)
                  (interleave (stream-map (lambda (ti)
                                            (list s0 ti))
                                          (stream-cdr t))
-                             (pairs-base (stream-cdr s)
-                                         (stream-cdr t)
-                                         interleave)))))
-
-(define (pairs s t)
-  (pairs-base s t interleave))
+                             (pairs (stream-cdr s)
+                                    (stream-cdr t)
+                                    )))))
 
 (define int-pairs (pairs integers integers))
 
@@ -26,28 +23,6 @@
     (cons-stream (stream-car s1)
                  (interleave s2
                              (stream-cdr s1)))))
-
-;(define (progressive-interleave s1 s2 n1 n2)
-  ;(define (split-stream s n)
-    ;(define (iter s-cur s-rest n)
-      ;(cond ((or (= n 0)
-                 ;(stream-null? s-rest))
-             ;(list s-cur s-rest))
-            ;(else
-              ;(iter (stream-append s-cur
-                                   ;(list (stream-car s-rest)))
-                    ;(stream-cdr s-rest)
-                    ;(- n 1)))))
-    ;(iter the-empty-stream s n))
-
-  ;(let* ((s1-pair (split-stream s1 n1))
-         ;(s1-cur (car s1-pair))
-         ;(s1-rest (cadr s1-pair)))
-    ;(cond ((stream-null? s1-rest)
-           ;(stream-append s1-cur s2))
-          ;(else
-            ;(stream-append s1-cur
-                           ;(progressive-interleave s2 s1-rest n2 n1))))))
 
 (stream-ref (stream-filter (lambda (pair)
                              (prime? (+ (car pair)
@@ -101,3 +76,71 @@
                                            int-triples))
 
 ; (stream-display-n pythagorean-triples 5)
+
+(define (weighted-pairs s t weight)
+  (let ((s0 (stream-car s))
+        (t0 (stream-car t)))
+    ; (s0 t0) must be the first, or there'll be problem for
+    ; the func
+    (cons-stream (list s0 t0)
+                 (merge-weighted (stream-map (lambda (ti)
+                                               (list s0 ti))
+                                             (stream-cdr t))
+                                 (weighted-pairs (stream-cdr s)
+                                                 (stream-cdr t)
+                                                 weight)
+                                 weight))))
+
+(define (merge-weighted s1 s2 weight)
+  (cond ((stream-null? s1) s2)
+        ((stream-null? s2) s1)
+        (else
+          (let ((s1car (stream-car s1))
+                (s2car (stream-car s2)))
+            ;(display s1car)(display " ")
+            ;(display s2car)(newline)
+            (cond ((weight s1car s2car)
+                   (cons-stream s1car
+                                (merge-weighted (stream-cdr s1)
+                                                s2
+                                                weight)))
+                  ((weight s2car s1car)
+                   (cons-stream s2car
+                                (merge-weighted s1
+                                                (stream-cdr s2)
+                                                weight)))
+                  (else
+                    (cons-stream s1car
+                                 (cons-stream s2car
+                                              (merge-weighted (stream-cdr s1)
+                                                              (stream-cdr s2)
+                                                              weight)))))))))
+
+; 3.70 a
+(define weighted-pairs-by-a (weighted-pairs integers integers (lambda (p1 p2)
+                                                                (< (+ (car p1)
+                                                                      (cadr p1))
+                                                                   (+ (car p2)
+                                                                      (cadr p2))))))
+
+(stream-ref weighted-pairs-by-a 10)
+
+; 3.70 b
+(define integer-not-divisible-235 (stream-filter (lambda (v)
+                                                            (not (or (divisible? v 2)
+                                                                     (divisible? v 3)
+                                                                     (divisible? v 5))))
+                                                 integers))
+
+(define weighted-pairs-by-b (weighted-pairs integer-not-divisible-235
+                                            integer-not-divisible-235
+                                            (lambda (p1 p2)
+                                              (define (sum-rule i j)
+                                                (+ (* 2 i)
+                                                   (* 3 j)
+                                                   (* 5 i j)))
+                                              (< (sum-rule (car p1)
+                                                           (cadr p1))
+                                                 (sum-rule (car p2)
+                                                           (cadr p2))))))
+; (stream-display-n weighted-pairs-by-b 10)
