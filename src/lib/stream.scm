@@ -149,6 +149,7 @@
   (define integers
     (cons-stream 1 (stream-add ones integers)))
 
+  ; sum of stream
   (define (partial-sum s)
     (define sum (cons-stream (stream-car s)
                              (stream-add (stream-cdr s)
