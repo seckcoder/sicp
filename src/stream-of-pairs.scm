@@ -53,7 +53,7 @@
 
 ; (stream-display-n (louis-pairs integers integers) 10)
 
-; 3.69
+; 3.69 unfinished
 (define (triples s t u)
   (cons-stream (list (stream-car s)
                      (stream-car t)
