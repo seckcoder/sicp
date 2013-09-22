@@ -42,4 +42,13 @@
                              (full-pairs (stream-cdr s)
                                          (stream-cdr t))))))
 
-(stream-display-n (full-pairs integers integers) 20)
+(stream-ref (full-pairs integers integers) 20)
+
+; 3.68
+(define (louis-pairs s t)
+  (interleave
+    (stream-map (lambda (x) (list (stream-car s) x))
+                t)
+    (louis-pairs (stream-cdr s) (stream-cdr t))))
+
+; (stream-display-n (louis-pairs integers integers) 10)
