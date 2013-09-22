@@ -67,4 +67,11 @@
 
 (define int-triples (triples integers integers integers))
 
-(stream-ref int-triples 100)
+(define pythagorean-triples (stream-filter (lambda (triple)
+                                             (let ((i (car triple))
+                                                   (j (cadr triple))
+                                                   (k (caddr triple)))
+                                               (pythagorean-triple? i j k)))
+                                           int-triples))
+
+(stream-display-n pythagorean-triples 10)

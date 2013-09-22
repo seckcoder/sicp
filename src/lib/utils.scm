@@ -11,7 +11,8 @@
           divides?
           divisible? 
           println
-          average)
+          average
+          pythagorean-triple?)
   (import (chezscheme))
   (define (set-cadr! lst v)
     (set-car! (cdr lst) v))
@@ -55,4 +56,9 @@
 
   (define (average a b)
     (/ (+ a b) 2.0))
+
+  (define (pythagorean-triple? i j k)
+    (= (square k)
+       (+ (square i)
+          (square j))))
   )
