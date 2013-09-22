@@ -22,7 +22,8 @@
           stream-display-n
           stream-negate
           one-zeros
-          interleave)
+          interleave
+          stream-append)
 
   (import (rnrs)
           (utils))
@@ -54,12 +55,20 @@
 
   (define (stream-car stream) (car stream))
 
+
   (define (stream-cdr stream) (force (cdr stream)))
 
   (define the-empty-stream '())
 
   (define (stream-null? s)
     (null? s))
+
+  ; append s1 to s2, note s1 should not be infinite stream
+  (define (stream-append s1 s2)
+    (if (stream-null? s1)
+      s2
+      (cons-stream (stream-car s1)
+                   (stream-append (stream-cdr s1) s2))))
 
   ;  (define (stream-map proc s)
   ;(if (stream-null? s)
