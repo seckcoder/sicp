@@ -12,6 +12,7 @@
           stream-display
           stream-ref
           stream-add
+          stream-minus
           stream-scale
           integers-start-from
           stream-mult
@@ -19,7 +20,8 @@
           partial-sum
           integers
           stream-display-n
-          negate)
+          stream-negate
+          one-zeros)
 
   (import (rnrs)
           (utils))
@@ -118,6 +120,9 @@
   (define (stream-add s1 s2)
     (stream-map + s1 s2))
 
+  (define (stream-minus s1 s2)
+    (stream-map - s1 s2))
+
   (define (stream-scale s factor)
     (stream-map (lambda (x) (* x factor)) s))
 
@@ -130,8 +135,13 @@
   (define (stream-div s1 s2)
     (stream-map / s1 s2))
 
+  (define zeros
+    (cons-stream 0 zeros))
+
   (define ones
     (cons-stream 1 ones))
+
+  (define one-zeros (cons-stream 1 zeros))
 
   (define negative-ones
     (cons-stream -1 negative-ones))
@@ -145,7 +155,7 @@
                                          sum)))
     sum)
 
-  (define (negate s)
+  (define (stream-negate s)
     (stream-mult negative-ones
                  s))
   )
