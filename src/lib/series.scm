@@ -6,7 +6,9 @@
           exp-series
           sine-series
           cosine-series
-          invert-unit-series)
+          invert-unit-series
+          div-series
+          tan-series)
 
   (import (rnrs)
           (stream)
@@ -34,4 +36,14 @@
                      (mul-series (stream-cdr s)
                                  inverted-series))))
     inverted-series)
+
+  (define (div-series s1 s2)
+    (let ((c2 (stream-car s2)))
+      (if (= c2 0)
+        (error div-series "series haszero constant term")
+        (mul-series (stream-scale s1 (/ 1 c2))
+                    (invert-unit-series (stream-scale s2 (/ 1 c2)))))))
+
+  (define tan-series
+    (div-series sine-series cosine-series))
   )
