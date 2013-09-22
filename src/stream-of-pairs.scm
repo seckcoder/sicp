@@ -23,8 +23,23 @@
                  (interleave s2
                              (stream-cdr s1)))))
 
-(stream-display-n (stream-filter (lambda (pair)
-                                   (prime? (+ (car pair)
-                                              (cadr pair))))
-                                 int-pairs)
-                  10)
+(stream-ref (stream-filter (lambda (pair)
+                             (prime? (+ (car pair)
+                                        (cadr pair))))
+                           int-pairs) 10)
+
+; 3.67
+(define (full-pairs s t)
+  (let ((s0 (stream-car s))
+        (t0 (stream-car t)))
+    (cons-stream (list s0 t0)
+                 (interleave (interleave (stream-map (lambda (ti)
+                                                       (list s0 ti))
+                                                     (stream-cdr t))
+                                         (stream-map (lambda (si)
+                                                       (list si t0))
+                                                     (stream-cdr s)))
+                             (full-pairs (stream-cdr s)
+                                         (stream-cdr t))))))
+
+(stream-display-n (full-pairs integers integers) 20)
