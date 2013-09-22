@@ -10,7 +10,8 @@
           sleepfor
           divides?
           divisible? 
-          println)
+          println
+          average)
   (import (chezscheme))
   (define (set-cadr! lst v)
     (set-car! (cdr lst) v))
@@ -51,4 +52,7 @@
   (define (println v)
     (display v)(newline)
     v)
+
+  (define (average a b)
+    (/ (+ a b) 2.0))
   )
