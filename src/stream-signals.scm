@@ -2,7 +2,7 @@
         (stream)
         (utils))
 
-; 3.73 (not fully understand it)
+; 3.73 (not really understand it)
 
 (define (rc r c dt)
   (lambda (I v0)
@@ -16,3 +16,5 @@
 (define constant-current (RC1 ones 0))
 
 (stream-display-n constant-current 10)
+
+; 3.74, 3.75, 3.76 unfinished

@@ -25,9 +25,11 @@
           ones
           interleave
           stream-append
-          integral)
+          integral
+          integral-delayed)
 
   (import (rnrs)
+          (rnrs r5rs)
           (utils))
 
   (define (memo-proc proc)
@@ -39,13 +41,19 @@
                  result)
           result))))
 
-  (define (force delayed-object)
-    (delayed-object))
+  ;(define (force delayed-object)
+  ;(delayed-object))
+
 
   (define-syntax cons-stream
     (syntax-rules ()
                   ((cons-stream a b)
-                   (cons a (memo-proc (lambda () b))))))
+                   (cons a (memo-proc (delay b))))))
+
+  ;(define-syntax delay
+  ;(syntax-rules ()
+  ;((_ v) (lambda () v))))
+
   ;(cons a (lambda () b)))))
 
   (define-syntax list-stream
@@ -194,5 +202,13 @@
       (cons-stream initial-value
                    (stream-add (stream-scale integrand dt)
                                int)))
+    int)
+
+  (define (integral-delayed delayed-integrand initial-value dt)
+    (define int
+      (cons-stream initial-value
+                   (let ((integrand (force delayed-integrand)))
+                     (stream-add (stream-scale integrand dt)
+                                 int))))
     int)
   )
