@@ -22,8 +22,10 @@
           stream-display-n
           stream-negate
           one-zeros
+          ones
           interleave
-          stream-append)
+          stream-append
+          integral)
 
   (import (rnrs)
           (utils))
@@ -92,7 +94,7 @@
   ;(else
   ;(stream-filter proc (stream-cdr s)))))
 
-  
+
   (define (stream-filter proc . stream-args)
     (cond ((stream-null? (car stream-args)) the-empty-stream)
           ((apply proc (map stream-car stream-args))
@@ -186,4 +188,11 @@
       (cons-stream (stream-car s1)
                    (interleave s2
                                (stream-cdr s1)))))
+
+  (define (integral integrand initial-value dt)
+    (define int
+      (cons-stream initial-value
+                   (stream-add (stream-scale integrand dt)
+                               int)))
+    int)
   )
