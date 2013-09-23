@@ -178,3 +178,27 @@
                           (ramanujan-sum (car p)))
                         ramanujan-series)
             5)
+
+; 3.72
+(define (square-sum p)
+  (+ (square (car p))
+     (square (cadr p))))
+(define square-sum-in-3-pairs (weighted-pairs integers
+                                              integers
+                                              (lambda (p1 p2)
+                                                (< (square-sum p1)
+                                                   (square-sum p2)))))
+
+(define square-sum-in-3-series (stream-filter (lambda (p1 p2 p3)
+                                           (= (square-sum p1)
+                                              (square-sum p2)
+                                              (square-sum p3)))
+                                         square-sum-in-3-pairs
+                                         (stream-cdr square-sum-in-3-pairs)
+                                         (stream-cdr (stream-cdr square-sum-in-3-pairs))))
+
+(stream-display-n (stream-map (lambda (t)
+                                (cons (square-sum (car t))
+                                      t))
+                              square-sum-in-3-series)
+                  5)
