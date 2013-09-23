@@ -54,7 +54,7 @@
 
 ; (stream-display-n (louis-pairs integers integers) 10)
 
-; 3.69 unfinished
+; 3.69
 (define (triples s t u)
   (cons-stream (list (stream-car s)
                      (stream-car t)
@@ -75,6 +75,18 @@
                                                (pythagorean-triple? i j k)))
                                            int-triples))
 
+(define (weighted-triples s t u weight)
+  (cons-stream (list (stream-car s)
+                     (stream-car t)
+                     (stream-car u))
+               (merge-weighted (stream-map (lambda (pair)
+                                             (cons (stream-car s) pair))
+                                           (stream-cdr (pairs t u)))
+                               (triples (stream-cdr s)
+                                        (stream-cdr t)
+                                        (stream-cdr u)
+                                        weight)
+                               weight)))
 ; (stream-display-n pythagorean-triples 5)
 
 (define (weighted-pairs s t weight)
@@ -127,9 +139,9 @@
 
 ; 3.70 b
 (define integer-not-divisible-235 (stream-filter (lambda (v)
-                                                            (not (or (divisible? v 2)
-                                                                     (divisible? v 3)
-                                                                     (divisible? v 5))))
+                                                   (not (or (divisible? v 2)
+                                                            (divisible? v 3)
+                                                            (divisible? v 5))))
                                                  integers))
 
 (define weighted-pairs-by-b (weighted-pairs integer-not-divisible-235
@@ -144,3 +156,25 @@
                                                  (sum-rule (car p2)
                                                            (cadr p2))))))
 ; (stream-display-n weighted-pairs-by-b 10)
+
+(define (ramanujan-sum p)
+  (+ (cube (car p))
+     (cube (cadr p))))
+;3.71
+(define ramanujan-weighted-pairs (weighted-pairs integers
+                                                 integers
+                                                 (lambda (p1 p2)
+                                                   (< (ramanujan-sum p1)
+                                                      (ramanujan-sum p2)))))
+
+
+(define ramanujan-series (stream-filter (lambda (p1 p2)
+                                          (= (ramanujan-sum p1)
+                                             (ramanujan-sum p2)))
+                                        ramanujan-weighted-pairs
+                                        (stream-cdr ramanujan-weighted-pairs)))
+
+(stream-ref (stream-map (lambda (p)
+                          (ramanujan-sum (car p)))
+                        ramanujan-series)
+            5)

@@ -2,6 +2,7 @@
 (library
   (utils)
   (export square
+          cube
           set-cadr!
           set-caddr!
           inlist?
@@ -22,6 +23,9 @@
 
   (define (square x)
     (* x x))
+
+  (define (cube x)
+    (* x x x))
 
   (define (inlist? x lst eqfn)
     (if (filter (lambda (y)

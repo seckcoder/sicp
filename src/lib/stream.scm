@@ -84,13 +84,22 @@
       (cons-stream (apply proc (map stream-car stream-args))
                    (apply stream-map (cons proc (map stream-cdr stream-args))))))
 
-  (define (stream-filter proc s)
-    (cond ((stream-null? s) the-empty-stream)
-          ((proc (stream-car s))
-           (cons-stream (stream-car s)
-                        (stream-filter proc (stream-cdr s))))
+  ;(define (stream-filter proc s)
+  ;(cond ((stream-null? s) the-empty-stream)
+  ;((proc (stream-car s))
+  ;(cons-stream (stream-car s)
+  ;(stream-filter proc (stream-cdr s))))
+  ;(else
+  ;(stream-filter proc (stream-cdr s)))))
+
+  
+  (define (stream-filter proc . stream-args)
+    (cond ((stream-null? (car stream-args)) the-empty-stream)
+          ((apply proc (map stream-car stream-args))
+           (cons-stream (map stream-car stream-args)
+                        (apply stream-filter (cons proc (map stream-cdr stream-args)))))
           (else
-            (stream-filter proc (stream-cdr s)))))
+            (apply stream-filter (cons proc (map stream-cdr stream-args))))))
 
   (define (stream-enumerate-interval low high)
     (if (> low high)
