@@ -1,6 +1,8 @@
 (library
   (dict)
-  (export make-dict)
+  (export make-dict
+          dict-lookup
+          dict-insert!)
   (import (rnrs)
           (rnrs mutable-pairs))
   (define (make-dict)
@@ -36,4 +38,10 @@
               ((eq? action 'akey) akey)
               (else (error 'dict-dispatch "UNKNOWN ACTION" action))))
       dispatch))
+
+  (define (dict-lookup d key)
+    ((d 'lookup) key))
+
+  (define (dict-insert! d key value)
+    ((d 'insert) key value))
   )
