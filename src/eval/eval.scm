@@ -60,7 +60,7 @@
         (let ((found (car ret))
               (value (cadr ret)))
           (cond (found value)
-                ((null? (base-env))
+                ((empty-env? (base-env))
                  (error 'lookup "variable not defined" var))
                 (else
                   (((base-env) 'lookup) var))))))
@@ -104,6 +104,8 @@
   ((env 'insert) var value))
 
 (define the-empty-env '())
+(define (empty-env? env)
+  (null? env))
 
 ; @(expression)
 
@@ -129,6 +131,14 @@
         ((last-exp? seq) (first-exp seq))
         (else
           (make-begin seq))))
+
+(define (sequence->exp-2 predicate actions)
+  (if (eq? (car actions) '=>)
+    ; transforms to '(cadr (= a 3)) if predicate is (= a 3)
+    ; Note predicate will evaluated twice in the conditions!
+    (list (cadr actions)
+          predicate)  
+    (sequence->exp actions)))
 
 (define (make-begin seq)
   (cons 'begin seq))
@@ -315,13 +325,15 @@
       'false
       (let ((first (cond-firstmatch matches))
             (rest (cond-restmatches matches)))
-        (if (cond-elsematch? first)
-          (if (null? rest)
-            (make-if 'true (sequence->exp (cond-match-actions first)))
-            (error 'cond "else is not last match"))
-          (make-if (cond-match-predicate first)
-                   (sequence->exp (cond-match-actions first))
-                   (expand rest))))))
+        (cond ((cond-elsematch? first) ;else
+               (if (null? rest)
+                 (make-if 'true (sequence->exp (cond-match-actions first)))
+                 (error 'cond "else is not last match")))
+              (else ; the other conditions
+               (make-if (cond-match-predicate first)
+                        (sequence->exp-2 (cond-match-predicate first)
+                                         (cond-match-actions first))
+                        (expand rest)))))))
   (expand (cdr exp)))
 
 ; @(and/or)
