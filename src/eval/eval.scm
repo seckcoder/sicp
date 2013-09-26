@@ -16,8 +16,9 @@
         ((cond? exp) (seck-eval (cond->if exp) env))
         ((application? exp)
          (seck-apply (seck-eval (operator exp) env)
-                     (list-of-values (operand exp) env)))))
-
+                     (list-of-values (operand exp) env)))
+        (else
+          (error 'seck-eval "eval failed to recognize expression" exp))))
 
 ; @(tools)
 (define (tagged-list? exp tag)
@@ -321,6 +322,7 @@
 (define (operand exp) (cdr exp))
 (define (first-operand exps) (car exps))
 (define (rest-operands exps) (cdr exps))
+; fetch a list of values, eval them and return results as list
 (define (list-of-values exps env)
   (if (null? exps)
     '()
