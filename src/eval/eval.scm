@@ -1,5 +1,25 @@
 (load "./utils/dict.scm")
 
+(define (assert v)
+  (if (not v)
+    (error 'assert "failed")))
+
+(define (typeof v)
+  (cond ((boolean? v)
+         'boolean)
+        ((number? v)
+         'number)
+        ((string? v)
+         'string)
+        ((symbol? v)
+         'symbol)
+        ((null? v)
+         'null)
+        ((pair? v)
+         'pair)
+        (else
+          'unknown)))
+
 (define (seck-eval exp env)
   (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
@@ -14,6 +34,8 @@
         ((begin? exp)
          (eval-sequence (begin-actions exp) env))
         ((cond? exp) (seck-eval (cond->if exp) env))
+        ((and? exp) (seck-eval (and->if exp) env))
+        ((or? exp) (seck-eval (or->if exp) env))
         ((application? exp)
          (seck-apply (seck-eval (operator exp) env)
                      (list-of-values (operand exp) env)))
@@ -142,6 +164,7 @@
         (list '/ /)
         (list '> >)
         (list '< <)
+        (list '= =)
         ))
 
 (define (primitive-procedure-names)
@@ -156,8 +179,8 @@
   (cadr proc))
 
 (define primitive-vars
-  (list (list '#t #t)
-        (list '#f #f)
+  (list (list 'true #t)
+        (list 'false #f)
         ))
 
 (define (primitive-var-names)
@@ -245,7 +268,7 @@
 
 (define (make-if predicate consequent . args)
   (if (null? args)
-    (list 'if predicate consequent '#f)
+    (list 'if predicate consequent 'false)
     (list 'if predicate consequent (car args))))
 
 (define (if? exp)
@@ -260,7 +283,7 @@
 (define (if-alternative exp)
   (if (not (null? (cdddr exp)))
     (cadddr exp)
-    '#f))
+    'false))
 
 (define (eval-if exp env)
   (if (seck-eval (if-predicate exp) env)
@@ -289,16 +312,41 @@
 (define (cond->if exp)
   (define (expand matches)
     (if (null? matches)
-      '#f
+      'false
       (let ((first (cond-firstmatch matches))
             (rest (cond-restmatches matches)))
         (if (cond-elsematch? first)
           (if (null? rest)
-            (make-if #t (sequence->exp (cond-match-actions first)))
+            (make-if 'true (sequence->exp (cond-match-actions first)))
             (error 'cond "else is not last match"))
           (make-if (cond-match-predicate first)
                    (sequence->exp (cond-match-actions first))
                    (expand rest))))))
+  (expand (cdr exp)))
+
+; @(and/or)
+(define (and? exp)
+  (tagged-list? exp 'and))
+
+(define (or? exp)
+  (tagged-list? exp 'or))
+
+(define (and->if exp)
+  (define (expand exps)
+    (if (null? exps)
+      (make-if 'true 'true)
+      (make-if (car exps)
+               (expand (cdr exps))
+               'true)))
+  (expand (cdr exp)))
+
+(define (or->if exp)
+  (define (expand exps)
+    (if (null? exps)
+      (make-if 'true 'false)
+      (make-if (car exps)
+               'true
+               (expand (cdr exps)))))
   (expand (cdr exp)))
 
 ; @(lambda)
@@ -358,6 +406,7 @@
     (seck-eval '(define a 3) new-env)
     (seck-eval '(set! a 4) new-env)
     (assert (= (seck-eval 'a new-env) 4))
+    ; (assert (seck-eval '(and (= a 4) (< a 5) (> a 2)) new-env))
     (seck-eval '(define (op a b)
                   (if (> a b)
                     (- a b)
