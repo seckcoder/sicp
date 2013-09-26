@@ -36,6 +36,7 @@
         ((cond? exp) (seck-eval (cond->if exp) env))
         ((and? exp) (seck-eval (and->if exp) env))
         ((or? exp) (seck-eval (or->if exp) env))
+        ((let? exp) (seck-eval (let->combination exp) env))
         ((application? exp)
          (seck-apply (seck-eval (operator exp) env)
                      (list-of-values (operand exp) env)))
@@ -375,6 +376,18 @@
 (define (lambda-body exp)
   (cddr exp))
 
+; @(let)
+(define (let? exp)
+  (tagged-list? exp 'let))
+
+(define (let->combination exp)
+  (let ((var-bindings (cadr exp))
+        (body (cddr exp)))
+    (let ((vars (map car var-bindings))
+          (values (map cadr var-bindings)))
+      (cons (cons 'lambda
+                  (cons vars body))
+            values))))
 
 ; @(application)
 (define application? pair?)
@@ -437,4 +450,9 @@
                     1))
     (assert (equal? (seck-eval '(op2 2 2) new-env)
                     4))
+    (assert (equal? (seck-eval '(let ((a 3)
+                                      (b 4))
+                                  (cons a b))
+                               new-env)
+                    (cons 3 4)))
     ))
