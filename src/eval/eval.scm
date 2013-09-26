@@ -3,47 +3,22 @@
 (define (seck-eval exp env)
   (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
+        ((assignment? exp) (eval-assignment exp env))
+        ((definition? exp) (eval-definition exp env))
+        ((lambda? exp)
+         (make-procedure (lambda-params exp)
+                         (lambda-body exp)
+                         env))
         ((application? exp)
          (seck-apply (seck-eval (operator exp) env)
                      (list-of-values (operand exp) env)))))
 
+
+; @(tools)
 (define (tagged-list? exp tag)
   (if (pair? exp)
     (eq? (car exp) tag)
     #f))
-
-(define (self-evaluating? exp)
-  (cond ((number? exp) #t)
-        ((string? exp) #t)
-        (else #f)))
-
-(define (variable? exp)
-  (symbol? exp))
-
-(define application? pair?)
-(define (operator exp) (car exp))
-(define (operand exp) (cdr exp))
-(define (first-operand exps) (car exps))
-(define (rest-operands exps) (cdr exps))
-(define (list-of-values exps env)
-  (if (null? exps)
-    '()
-    (cons (seck-eval (first-operand exps) env)
-          (list-of-values (rest-operands exps) env))))
-(define (seck-apply procedure arguments)
-  (cond ((primitive-procedure? procedure)
-         (apply-primitive-procedure (primitive-proc-impl procedure) arguments))
-        ((compound-procedure? procedure)
-         (eval-sequence
-           (procedure-body procedure)
-           (extend-environment
-             (procedure-parameters procedure)
-             arguments
-             (procedure-environment procedure))))
-        (else
-          (error
-            'seck-apply
-            "Inknown procedure type" procedure))))
 
 ; @(environment)
 
@@ -102,6 +77,45 @@
 
 (define the-empty-env '())
 
+; @(expression)
+
+(define (first-exp exps)
+  (car exps))
+
+(define (rest-exps exps)
+  (cdr exps))
+
+(define (last-exp? exps)
+  (and (pair? exps)
+       (null? (cdr exps))))
+
+(define (begin? exp)
+  (tagged-list? exp 'begin))
+
+(define (begin-actions exp)
+  (cdr exp))
+
+; implicit begin
+(define (sequence->exp seq)
+  (cond ((null? seq) seq)
+        ((last-exp? seq) (first-exp seq))
+        (else
+          (make-begin seq))))
+
+(define (make-begin seq)
+  (cons 'begin seq))
+
+; @(self-evaluating)
+(define (self-evaluating? exp)
+  (cond ((number? exp) #t)
+        ((string? exp) #t)
+        (else #f)))
+
+(define (variable? exp)
+  (symbol? exp))
+
+
+
 ; @(primitives)
 
 (define primitive-procedures
@@ -158,8 +172,8 @@
 (define (compound-procedure? proc)
   (tagged-list? proc 'procedure))
 
-(define (make-procedure params body env)
-  (list 'procedure params body env))
+(define (make-procedure params body-seq env)
+  (list 'procedure params body-seq env))
 
 (define (procedure-parameters proc)
   (cadr proc))
@@ -170,7 +184,88 @@
 (define (procedure-env proc)
   (cadddr proc))
 
+(define (eval-sequence exps env)
+  (if (last-exp? exps)
+    (seck-eval (first-exp exps) env)
+    (eval-sequence (rest-exps) env)))
 
+; @(assignment)
+
+(define (assignment? exp)
+  (tagged-list? exp 'set!))
+
+(define (assignment-var exp)
+  (cadr exp))
+
+(define (assignment-value exp)
+  (caddr exp))
+
+(define (eval-assignment exp env)
+  (set-variable-value! (assignment-var exp)
+                       (seck-eval (assignment-value exp) env)
+                       env))
+
+; @(defintion)
+
+(define (definition? exp)
+  (tagged-list? exp 'define))
+
+(define (definition-var exp)
+  (if (symbol? (cadr exp))
+    (cadr exp)
+    (caadr exp)))
+
+(define (definition-value exp)
+  (if (symbol? (cadr exp))
+    (caddr exp)
+    (make-lambda (cdadr exp)
+                 (cddr exp))))
+
+(define (eval-definition exp env)
+  (define-variable! (definition-var exp)
+                    (seck-eval (definition-value exp) env)
+                    env))
+
+; @(lambda)
+
+(define (lambda? exp)
+  (tagged-list? exp 'lambda))
+
+(define (make-lambda params body-seq)
+  (cons 'lambda (cons params body-seq)))
+
+(define (lambda-params exp)
+  (cadr exp))
+
+(define (lambda-body exp)
+  (cddr exp))
+
+
+; @(application)
+(define application? pair?)
+(define (operator exp) (car exp))
+(define (operand exp) (cdr exp))
+(define (first-operand exps) (car exps))
+(define (rest-operands exps) (cdr exps))
+(define (list-of-values exps env)
+  (if (null? exps)
+    '()
+    (cons (seck-eval (first-operand exps) env)
+          (list-of-values (rest-operands exps) env))))
+(define (seck-apply procedure arguments)
+  (cond ((primitive-procedure? procedure)
+         (apply-primitive-procedure (primitive-proc-impl procedure) arguments))
+        ((compound-procedure? procedure)
+         (eval-sequence
+           (procedure-body procedure)
+           (extend-environment
+             (procedure-parameters procedure)
+             arguments
+             (procedure-env procedure))))
+        (else
+          (error
+            'seck-apply
+            "Inknown procedure type" procedure))))
 
 ; @(global env)
 (define (setup-environment)
@@ -183,4 +278,11 @@
 (define (test-eval)
   (assert (= (seck-eval '(+ 1 2) global-env) 3))
   (assert (equal? (seck-eval '(cons 1 2) global-env) (cons 1 2)))
-  )
+  (let ((new-env (make-env global-env)))
+    (seck-eval '(define a 3) new-env)
+    (seck-eval '(set! a 4) new-env)
+    (assert (= (seck-eval 'a new-env) 4))
+    (seck-eval '(define (mycons a b) (cons a b)) new-env)
+    (assert (equal? (seck-eval '(mycons 1 2) new-env)
+                    (cons 1 2)))
+    ))
