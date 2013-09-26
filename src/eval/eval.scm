@@ -1,7 +1,9 @@
-(load "./dict.scm")
+(load "./utils/dict.scm")
 
 (define (seck-eval exp env)
-  (cond ((application? exp)
+  (cond ((self-evaluating? exp) exp)
+        ((variable? exp) (lookup-variable-value exp env))
+        ((application? exp)
          (seck-apply (seck-eval (operator exp) env)
                      (list-of-values (operand exp) env)))))
 
@@ -9,6 +11,14 @@
   (if (pair? exp)
     (eq? (car exp) tag)
     #f))
+
+(define (self-evaluating? exp)
+  (cond ((number? exp) #t)
+        ((string? exp) #t)
+        (else #f)))
+
+(define (variable? exp)
+  (symbol? exp))
 
 (define application? pair?)
 (define (operator exp) (car exp))
@@ -22,7 +32,7 @@
           (list-of-values (rest-operands exps) env))))
 (define (seck-apply procedure arguments)
   (cond ((primitive-procedure? procedure)
-         (apply-primitive-procedure procedure arguments))
+         (apply-primitive-procedure (primitive-proc-impl procedure) arguments))
         ((compound-procedure? procedure)
          (eval-sequence
            (procedure-body procedure)
@@ -92,13 +102,6 @@
 
 (define the-empty-env '())
 
-(define (setup-environment)
-  (extend-environment (primitive-names)
-                              (primitive-values)
-                              the-empty-env))
-
-(define global-env (setup-environment))
-
 ; @(primitives)
 
 (define primitive-procedures
@@ -119,6 +122,9 @@
 (define (primitive-procedure-objects)
   (map (lambda (proc) (list 'primitive (cadr proc)))
        primitive-procedures))
+
+(define (primitive-proc-impl proc)
+  (cadr proc))
 
 (define primitive-vars
   (list (list '#t #t)
@@ -163,3 +169,18 @@
 
 (define (procedure-env proc)
   (cadddr proc))
+
+
+
+; @(global env)
+(define (setup-environment)
+  (extend-environment (primitive-names)
+                              (primitive-values)
+                              the-empty-env))
+
+(define global-env (setup-environment))
+
+(define (test-eval)
+  (assert (= (seck-eval '(+ 1 2) global-env) 3))
+  (assert (equal? (seck-eval '(cons 1 2) global-env) (cons 1 2)))
+  )
