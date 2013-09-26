@@ -1,8 +1,14 @@
 (load "./utils/dict.scm")
 
-(define (assert v)
-  (if (not v)
-    (error 'assert "failed")))
+(define (assert exp)
+  (if (not exp)
+    (error 'assert "expression is not true")
+    exp))
+
+(define (assert-eq a b eqproc)
+  (if (not (eqproc a b))
+    (error 'assert-eq a " and " b " is not equal")
+    #t))
 
 (define (typeof v)
   (cond ((boolean? v)
@@ -37,6 +43,7 @@
         ((and? exp) (seck-eval (and->if exp) env))
         ((or? exp) (seck-eval (or->if exp) env))
         ((let? exp) (seck-eval (let->combination exp) env))
+        ((letstar? exp) (seck-eval (let*->nested-let exp) env))
         ((application? exp)
          (seck-apply (seck-eval (operator exp) env)
                      (list-of-values (operand exp) env)))
@@ -236,7 +243,7 @@
 (define (eval-sequence exps env)
   (if (last-exp? exps)
     (seck-eval (first-exp exps) env)
-    (eval-sequence (rest-exps) env)))
+    (eval-sequence (rest-exps exps) env)))
 
 ; @(assignment)
 
@@ -331,10 +338,10 @@
                  (make-if 'true (sequence->exp (cond-match-actions first)))
                  (error 'cond "else is not last match")))
               (else ; the other conditions
-               (make-if (cond-match-predicate first)
-                        (sequence->exp-2 (cond-match-predicate first)
-                                         (cond-match-actions first))
-                        (expand rest)))))))
+                (make-if (cond-match-predicate first)
+                         (sequence->exp-2 (cond-match-predicate first)
+                                          (cond-match-actions first))
+                         (expand rest)))))))
   (expand (cdr exp)))
 
 ; @(and/or)
@@ -380,14 +387,42 @@
 (define (let? exp)
   (tagged-list? exp 'let))
 
+(define (let-bindings exp) (cadr exp))
+(define (let-body exp) (cddr exp))
+(define (let-vars exp) (map car (let-bindings exp)))
+; if you define let-values here, there will be 
+(define (let-vals exp) (map cadr (let-bindings exp)))
+
 (define (let->combination exp)
-  (let ((var-bindings (cadr exp))
-        (body (cddr exp)))
-    (let ((vars (map car var-bindings))
-          (values (map cadr var-bindings)))
-      (cons (cons 'lambda
-                  (cons vars body))
-            values))))
+  (make-let (let-vars exp)
+            (let-vals exp) ; todo
+            (let-body exp)))
+
+(define (make-let vars values body)
+  (cons (cons 'lambda
+              (cons vars body))
+        values))
+
+(define (letstar? exp)
+  (tagged-list? exp 'let*))
+
+(define (let*->nested-let exp)
+  (define (wrap-let-body vars values)
+    (cond ((and (null? vars)
+                (null? values))
+           (make-let vars values (let-body exp)))
+          ((or (null? vars)
+               (null? values))
+           (error 'wrap-let-body "let vars-values length not match"))
+          (else
+            (make-let (list (car vars))
+                      (list (car values))
+                      (wrap-let-body (cdr vars)
+                                     (cdr values))))
+          ))
+  (wrap-let-body (let-vars exp)
+                 (let-vals exp)  ; todo
+                 ))
 
 ; @(application)
 (define application? pair?)
@@ -424,12 +459,16 @@
 
 (define global-env (setup-environment))
 
-(define (test-eval)
-  (assert (= (seck-eval '(+ 1 2) global-env) 3))
-  (assert (equal? (seck-eval '(cons 1 2) global-env) (cons 1 2)))
+(define (init-test-env)
   (let ((new-env (make-env global-env)))
     (seck-eval '(define a 3) new-env)
     (seck-eval '(set! a 4) new-env)
+    new-env))
+
+(define (test-eval)
+  (let ((new-env (init-test-env)))
+    (assert (= (seck-eval '(+ 1 2) global-env) 3))
+    (assert (equal? (seck-eval '(cons 1 2) global-env) (cons 1 2)))
     (assert (= (seck-eval 'a new-env) 4))
     (assert (seck-eval '(and (= a 4) (< a 5) (> a 2)) new-env))
     (assert (seck-eval '(or (= a 5) (> a 5) (> a 2)) new-env))
@@ -455,4 +494,17 @@
                                   (cons a b))
                                new-env)
                     (cons 3 4)))
+    (display (let*->nested-let '(let* ((x 1)
+                                       (y (+ x 1))
+                                       (z (+ x a))
+                                       )
+                                  (+ x y z))))(newline)
+    (assert-eq (seck-eval '(let* ((x 1)
+                                  (y (+ x 1))
+                                  (z (+ x a))
+                                  )
+                             (+ x y z))
+                          new-env)
+               8
+               =)
     ))
