@@ -183,6 +183,7 @@
         (list '> >)
         (list '< <)
         (list '= =)
+        (list 'print print)
         ))
 
 (define (primitive-procedure-names)
@@ -394,14 +395,19 @@
 (define (let-vals exp) (map cadr (let-bindings exp)))
 
 (define (let->combination exp)
-  (make-let (let-vars exp)
-            (let-vals exp) ; todo
-            (let-body exp)))
+  (let->lambda (let-vars exp)
+               (let-vals exp) ; todo
+               (let-body exp)))
 
-(define (make-let vars values body)
+(define (let->lambda vars values body)
   (cons (cons 'lambda
               (cons vars body))
         values))
+
+(define (make-let var-bindings body)
+  (cons 'let
+        (cons var-bindings
+              body)))
 
 (define (letstar? exp)
   (tagged-list? exp 'let*))
@@ -410,15 +416,15 @@
   (define (wrap-let-body vars values)
     (cond ((and (null? vars)
                 (null? values))
-           (make-let vars values (let-body exp)))
+           (make-let '() (let-body exp)))
           ((or (null? vars)
                (null? values))
            (error 'wrap-let-body "let vars-values length not match"))
           (else
-            (make-let (list (car vars))
-                      (list (car values))
-                      (wrap-let-body (cdr vars)
-                                     (cdr values))))
+            (make-let (list (list (car vars)
+                                  (car values)))
+                      (list (wrap-let-body (cdr vars)
+                                           (cdr values)))))
           ))
   (wrap-let-body (let-vars exp)
                  (let-vals exp)  ; todo
@@ -494,17 +500,11 @@
                                   (cons a b))
                                new-env)
                     (cons 3 4)))
-    (display (let*->nested-let '(let* ((x 1)
-                                       (y (+ x 1))
-                                       (z (+ x a))
+    (assert (equal? (seck-eval '(let* ((x 1)
+                                       (y (+ x a))
+                                       (z (+ x y))
                                        )
-                                  (+ x y z))))(newline)
-    (assert-eq (seck-eval '(let* ((x 1)
-                                  (y (+ x 1))
-                                  (z (+ x a))
-                                  )
-                             (+ x y z))
-                          new-env)
-               8
-               =)
+                                  (+ x y z))
+                               new-env)
+                    12))
     ))
