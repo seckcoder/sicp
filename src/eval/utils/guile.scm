@@ -14,5 +14,5 @@
   (iter args))
 
 (define (println . args)
-  (print args)(newline)
+  (apply print args)(newline)
   )

@@ -1,5 +1,6 @@
 (load "./utils/dict.scm")
-(load "utils/guile.scm")
+(load "./utils/functional.scm")
+(load "./utils/guile.scm")
 
 (define (assert-eq a b eqproc)
   (if (not (eqproc a b))
@@ -181,6 +182,7 @@
         (list '< <)
         (list '= =)
         (list 'print print)
+        (list 'map map)
         ))
 
 (define (primitive-procedure-names)
@@ -219,7 +221,7 @@
   (tagged-list? proc 'primitive))
 
 (define (apply-primitive-procedure proc args)
-  (apply proc args))
+  (apply (primitive-proc-impl proc) args))
 
 ; @(procedures)
 
@@ -477,7 +479,7 @@
           (list-of-values (rest-operands exps) env))))
 (define (seck-apply procedure arguments)
   (cond ((primitive-procedure? procedure)
-         (apply-primitive-procedure (primitive-proc-impl procedure) arguments))
+         (apply-primitive-procedure procedure arguments))
         ((compound-procedure? procedure)
          (eval-sequence
            (procedure-body procedure)
@@ -488,7 +490,7 @@
         (else
           (error
             'seck-apply
-            "Inknown procedure type" procedure))))
+            "Unknown procedure type" procedure))))
 
 ; @(global env)
 (define (setup-environment)
@@ -568,3 +570,11 @@
                  )
                global-env)
     'pass)
+
+(define (simple-test)
+  (seck-eval '(define (foo x)
+                x)
+             global-env)
+  (display (seck-eval '(map foo '(1 2 3))
+                      global-env))
+  )
