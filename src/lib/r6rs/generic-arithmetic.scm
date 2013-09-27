@@ -12,7 +12,8 @@
           make-complex-from-mag-ang
           )
 
-  (import (chezscheme)
+  (import (rnrs)
+          (rnrs mutable-pairs)
           (base)
           (complex)
           (functional)

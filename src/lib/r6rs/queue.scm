@@ -6,7 +6,8 @@
           delete-queue!
           front-queue
           beautiful-display-queue)
-  (import (chezscheme))
+  (import (rnrs)
+          (rnrs mutable-pairs))
 
   (define (make-queue) (cons '() '()))
   (define (front-ptr q) (car q))

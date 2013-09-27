@@ -6,4 +6,4 @@ then
 fi
 #petite --libdirs lib --script $filename
 
-csi -q -I lib -s $filename
+csi -q -I lib/r6rs -s $filename

@@ -76,3 +76,15 @@
 
 (define (dict-set! d key value)
   ((d 'set) key value))
+
+(define (dict-keys d)
+  ((d 'keys)))
+
+(define (dict-display-keys d keys)
+  (if (not (null? keys))
+    (begin
+      (display (car keys))(display "-")(display (dict-lookup d (car keys)))(newline)
+      (dict-display-keys d (cdr keys)))))
+
+(define (dict-display d)
+  (dict-display-keys d (dict-keys d)))

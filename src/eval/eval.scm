@@ -1,9 +1,5 @@
 (load "./utils/dict.scm")
-
-(define (assert exp)
-  (if (not exp)
-    (error 'assert "expression is not true")
-    exp))
+(load "utils/guile.scm")
 
 (define (assert-eq a b eqproc)
   (if (not (eqproc a b))
@@ -99,7 +95,7 @@
              new-env)
             ((or (null? vars)
                  (null? values))
-             (error 'extend-environment "vars and values should have equal lenght"))
+             (error 'extend-environment "procedure arguments not match"))
             (else
               ((new-env 'insert) (car vars) (car values))
               (iter (cdr vars) (cdr values)))))
@@ -242,9 +238,14 @@
   (cadddr proc))
 
 (define (eval-sequence exps env)
-  (if (last-exp? exps)
-    (seck-eval (first-exp exps) env)
-    (eval-sequence (rest-exps exps) env)))
+  (cond ((null? exps)
+         (error 'eval-sequence "no expression in code in block"))
+        (( last-exp? exps)
+         (seck-eval (first-exp exps) env))
+        (else
+          (seck-eval (first-exp exps) env)
+          (eval-sequence (rest-exps exps) env))
+        ))
 
 ; @(assignment)
 
@@ -264,6 +265,8 @@
 
 ; @(defintion)
 
+(define (make-definition name value)
+  (list 'define name value))
 (define (definition? exp)
   (tagged-list? exp 'define))
 
@@ -388,20 +391,39 @@
 (define (let? exp)
   (tagged-list? exp 'let))
 
-(define (let-bindings exp) (cadr exp))
-(define (let-body exp) (cddr exp))
+(define (let-bindings exp)
+  (if (namedlet? exp)
+    (caddr exp)
+    (cadr exp)
+    ))
+
+(define (let-body exp)
+  (if (namedlet? exp)
+    (cdddr exp)
+    (cddr exp)
+    ))
 (define (let-vars exp) (map car (let-bindings exp)))
 ; if you define let-values here, there will be 
 (define (let-vals exp) (map cadr (let-bindings exp)))
+(define (namedlet? exp) (symbol? (cadr exp)))
+(define (let->name exp) (cadr exp))
 
 (define (let->combination exp)
-  (let->lambda (let-vars exp)
-               (let-vals exp) ; todo
-               (let-body exp)))
+  (if (namedlet? exp)
+    (cons (make-lambda '()
+                       (list (make-definition (let->name exp)
+                                              (make-lambda (let-vars exp)
+                                                           (let-body exp)))
+                             (cons (let->name exp)
+                                   (let-vals exp))
+                             ))
+          '())
+    (let->lambda (let-vars exp)
+                 (let-vals exp)
+                 (let-body exp))))
 
 (define (let->lambda vars values body)
-  (cons (cons 'lambda
-              (cons vars body))
+  (cons (make-lambda vars body)
         values))
 
 (define (make-let var-bindings body)
@@ -471,6 +493,16 @@
     (seck-eval '(set! a 4) new-env)
     new-env))
 
+(define test-let-exp '(let ((x 1)
+                            (y 2))
+                        (+ x y)))
+(define test-named-let-exp '(let fib-iter ((a 1)
+                                           (b 0)
+                                           (count 10))
+                              (if (= count 0)
+                                b
+                                (fib-iter (+ a b) a (- count 1)))))
+
 (define (test-eval)
   (let ((new-env (init-test-env)))
     (assert (= (seck-eval '(+ 1 2) global-env) 3))
@@ -507,4 +539,21 @@
                                   (+ x y z))
                                new-env)
                     12))
-    ))
+    (assert (equal? (seck-eval '(let fib-iter ((a 1)
+                                               (b 0)
+                                               (count 10))
+                                  (if (= count 0)
+                                    b
+                                    (fib-iter (+ a b)
+                                              a
+                                              (- count 1))))
+                               new-env)
+                    55))
+    )
+    (seck-eval '((lambda ()
+                   (define (foo a) a)
+                   (foo 3)
+                   )
+                 )
+               global-env)
+    'pass)
