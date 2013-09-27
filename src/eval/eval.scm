@@ -40,6 +40,7 @@
         ((or? exp) (seck-eval (or->if exp) env))
         ((let? exp) (seck-eval (let->combination exp) env))
         ((letstar? exp) (seck-eval (let*->nested-let exp) env))
+        ((for? exp) (seck-eval (for->let exp) env))
         ((application? exp)
          (seck-apply (seck-eval (operator exp) env)
                      (list-of-values (operand exp) env)))
@@ -451,6 +452,16 @@
   (wrap-let-body (let-vars exp)
                  (let-vals exp)  ; todo
                  ))
+
+; @(for)
+
+(define (for? exp)
+  (tagged-list? exp 'for))
+(define (for-init exp) (cadr exp))
+(define (for-can-continue exp) (caddr exp))
+(define (for-step exp) (cadddr exp))
+(define (for-body exp) (cddddr exp))
+
 
 ; @(application)
 (define application? pair?)
