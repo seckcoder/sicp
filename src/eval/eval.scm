@@ -30,7 +30,7 @@
         ((assignment? exp) (eval-assignment exp env))
         ((definition? exp) (eval-definition exp env))
         ((if? exp) (eval-if exp env))
-        ((lambda? exp)
+        ((lambda? exp) ; evaluated when define procedure
          (make-procedure (lambda-params exp)
                          (lambda-body exp)
                          env))
@@ -43,6 +43,7 @@
         ((letstar? exp) (seck-eval (let*->nested-let exp) env))
         ((for? exp) (seck-eval (for->let exp) env))
         ((application? exp)
+         ; evaluated when call procedure
          (seck-apply (seck-eval (operator exp) env)
                      (list-of-values (operand exp) env)))
         (else
@@ -53,6 +54,9 @@
   (if (pair? exp)
     (eq? (car exp) tag)
     #f))
+
+(define (unassigned? value)
+  (eq? value '*unassigned*))
 
 ; @(environment)
 
@@ -65,7 +69,11 @@
       (let ((ret (dict-lookup (cur-env-var-dict) var)))
         (let ((found (car ret))
               (value (cadr ret)))
-          (cond (found value)
+          (cond ((and found
+                      (not (unassigned? value)))
+                 value)
+                (found
+                  (error 'lookup "variabled looked up is unassigned"))
                 ((empty-env? (base-env))
                  (error 'lookup "variable not defined" var))
                 (else
@@ -249,6 +257,21 @@
           (seck-eval (first-exp exps) env)
           (eval-sequence (rest-exps exps) env))
         ))
+; proc-body is a sequence of expressions to be evaluated
+(define (scan-out-defines proc-body)
+  (let ((definitions (filter definition? proc-body))
+        (non-definitions (filter (compose not definition?)
+                                 proc-body)))
+    (make-let (map (lambda (exp)
+                     (list (definition-var exp)
+                           '*unassigned*))
+                   definitions)
+              (append (map (lambda (exp)
+                             (list 'set!
+                                   (definition-var exp)
+                                   (definition-value exp)))
+                           definitions)
+                      non-definitions))))
 
 ; @(assignment)
 
@@ -465,6 +488,7 @@
 (define (for-body exp) (cddddr exp))
 
 
+
 ; @(application)
 (define application? pair?)
 (define (operator exp) (car exp))
@@ -486,11 +510,19 @@
            (extend-environment
              (procedure-parameters procedure)
              arguments
+             ; Here, we eval the expression in
+             ; a new env which extends procedure env(the
+             ; env in which procedure is defined). This 
+             ; ensures lexical scoping.
+             ; If we evaluate the procedure bodyin
+             ; the env that seck-apply is called, then
+             ; it will be dynamic scoping.
              (procedure-env procedure))))
         (else
           (error
             'seck-apply
             "Unknown procedure type" procedure))))
+
 
 ; @(global env)
 (define (setup-environment)
@@ -563,18 +595,35 @@
                                new-env)
                     55))
     )
-    (seck-eval '((lambda ()
-                   (define (foo a) a)
-                   (foo 3)
-                   )
+  (seck-eval '((lambda ()
+                 (define (foo a) a)
+                 (foo 3)
                  )
-               global-env)
-    'pass)
-
-(define (simple-test)
-  (seck-eval '(define (foo x)
-                x)
+               )
              global-env)
-  (display (seck-eval '(map foo '(1 2 3))
-                      global-env))
-  )
+  'pass)
+
+(define proc (make-procedure '(c)
+                             '((define b (+ a x))
+                               (define a 5)
+                               (+ a b c))
+                             global-env))
+(define (test-scan-out-definitons)
+  (scan-out-defines (procedure-body proc)))
+
+(define (test-scoping)
+  ; if it's lexical scoping, it will return 7
+  ; but if it's dynamic scoping, it will return 8
+  (let ((new-env (make-env global-env)))
+    (seck-eval '(define a 4)
+               new-env)
+    (seck-eval '(define (foo)
+                  (+ a 3))
+               new-env)
+    (seck-eval '(define (bar)
+                  (define a 5)
+                  (foo))
+               new-env)
+    (println (seck-eval '(bar)
+                        new-env))
+    ))
