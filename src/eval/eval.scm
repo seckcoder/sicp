@@ -237,7 +237,10 @@
   (tagged-list? proc 'procedure))
 
 (define (make-procedure params body-seq env)
-  (list 'procedure params body-seq env))
+  (list 'procedure
+        params
+        (scan-out-defines body-seq)
+        env))
 
 (define (procedure-parameters proc)
   (cadr proc))
@@ -262,16 +265,23 @@
   (let ((definitions (filter definition? proc-body))
         (non-definitions (filter (compose not definition?)
                                  proc-body)))
-    (make-let (map (lambda (exp)
-                     (list (definition-var exp)
-                           '*unassigned*))
-                   definitions)
-              (append (map (lambda (exp)
-                             (list 'set!
-                                   (definition-var exp)
-                                   (definition-value exp)))
+    (if (not (null? definitions))
+      (list (make-let (map (lambda (exp)
+                             (list (definition-var exp)
+                                   ;; Here, we use '', since
+                                   ;; we want to pass a (quote symbol) to the evaluator,
+                                   ;; but not a symbol to the evaluator. The outer quote
+                                   ;; will be used to protect (quote symbol) in
+                                   ;; the naive scheme evaluator.
+                                   ''*unassigned*))
                            definitions)
-                      non-definitions))))
+                      (append (map (lambda (exp)
+                                     (list 'set!
+                                           (definition-var exp)
+                                           (definition-value exp)))
+                                   definitions)
+                              non-definitions)))
+      proc-body)))
 
 ; @(assignment)
 
@@ -610,20 +620,3 @@
                              global-env))
 (define (test-scan-out-definitons)
   (scan-out-defines (procedure-body proc)))
-
-(define (test-scoping)
-  ; if it's lexical scoping, it will return 7
-  ; but if it's dynamic scoping, it will return 8
-  (let ((new-env (make-env global-env)))
-    (seck-eval '(define a 4)
-               new-env)
-    (seck-eval '(define (foo)
-                  (+ a 3))
-               new-env)
-    (seck-eval '(define (bar)
-                  (define a 5)
-                  (foo))
-               new-env)
-    (println (seck-eval '(bar)
-                        new-env))
-    ))
