@@ -81,7 +81,7 @@
 (define (eval-sequence exps env)
   (cond ((null? exps)
          (error 'eval-sequence "no expression in code in block"))
-        (( last-exp? exps)
+        ((last-exp? exps)
          (seck-eval (first-exp exps) env))
         (else
           (seck-eval (first-exp exps) env)

@@ -26,6 +26,7 @@
         ((lambda? exp) (analyze-lambda exp))
         ((begin? exp) (analyze-sequence (begin-actions exp)))
         ((cond? exp) (analyze (cond->if exp)))
+        ((let? exp) (analyze (let->combination exp)))
         ((application? exp) (analyze-application exp))
         (else
           (error 'analyze "unknown expression type" exp))))
@@ -103,7 +104,10 @@
             proc))))
 
 (define (analyze-assignment exp)
-  (error 'analyze-assignment "not implemented"))
+  (let ((var (assignment-var exp))
+        (vproc (analyze (assignment-value exp))))
+    (lambda (env)
+      (set-variable-value! var (vproc env) env))))
 
 (define (test-analyze)
   (seck-eval '(define (fact n)
@@ -114,3 +118,10 @@
              global-env)
   (println (seck-eval '(fact 3) global-env))
   )
+
+(define (test-let)
+  (seck-eval '(let ((a 1)
+                    (b 2))
+                (set! a (* a b))
+                (+ a b))
+             global-env))
