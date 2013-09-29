@@ -41,6 +41,7 @@
         ((or? exp) (seck-eval (or->if exp) env))
         ((let? exp) (seck-eval (let->combination exp) env))
         ((letstar? exp) (seck-eval (let*->nested-let exp) env))
+        ((letrec? exp) (seck-eval (letrec->let exp) env))
         ((for? exp) (seck-eval (for->let exp) env))
         ((application? exp)
          ; evaluated when call procedure
@@ -239,7 +240,7 @@
 (define (make-procedure params body-seq env)
   (list 'procedure
         params
-        (scan-out-defines body-seq)
+        (scan-out-defines body-seq #f)
         env))
 
 (define (procedure-parameters proc)
@@ -261,11 +262,12 @@
           (eval-sequence (rest-exps exps) env))
         ))
 ; proc-body is a sequence of expressions to be evaluated
-(define (scan-out-defines proc-body)
+(define (scan-out-defines proc-body do-scan-out)
   (let ((definitions (filter definition? proc-body))
         (non-definitions (filter (compose not definition?)
                                  proc-body)))
-    (if (not (null? definitions))
+    (if (and do-scan-out
+             (not (null? definitions)))
       (list (make-let (map (lambda (exp)
                              (list (definition-var exp)
                                    ;; Here, we use '', since
@@ -488,6 +490,20 @@
                  (let-vals exp)  ; todo
                  ))
 
+
+(define (letrec? exp)
+  (tagged-list? exp 'letrec))
+(define (letrec->let exp)
+  (make-let 
+    (map (lambda (var)
+           (list var ''*assigned*))
+         (let-vars exp))
+    (append (map (lambda (var value)
+                   (list 'set! var value))
+                 (let-vars exp)
+                 (let-vals exp))
+            (let-body exp))))
+
 ; @(for)
 
 (define (for? exp)
@@ -613,10 +629,32 @@
              global-env)
   'pass)
 
-(define proc (make-procedure '(c)
-                             '((define b (+ a x))
-                               (define a 5)
-                               (+ a b c))
-                             global-env))
-(define (test-scan-out-definitons)
-  (scan-out-defines (procedure-body proc)))
+
+(define letrec-exp '(letrec ((even?
+                               (lambda (n)
+                                 (if (= n 0)
+                                   true
+                                   (odd? (- n 1)))))
+                             (odd?
+                               (lambda (n)
+                                 (if (= n 0)
+                                   false
+                                   (even? (- n 1))))))
+                      (even? x)))
+
+(define (test-letrec)
+  (seck-eval '(define (f x)
+                (letrec ((even?
+                           (lambda (n)
+                             (if (= n 0)
+                               true
+                               (odd? (- n 1)))))
+                         (odd?
+                           (lambda (n)
+                             (if (= n 0)
+                               false
+                               (even? (- n 1))))))
+                  (even? x)))
+             global-env)
+  (seck-eval '(f 3) global-env)
+  )
