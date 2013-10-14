@@ -253,10 +253,10 @@
 ; we define the part that is not related to length/mk-length as Y
 ; that is y-combinator
 (define Y
-  (lambda (le)
+  (lambda (g)
     ((lambda (f) (f f))
      (lambda (f)
-       (le (lambda (x) ((f f) x)))))))
+       (g (lambda (x) ((f f) x)))))))
 
 (define mk-length
   (lambda (length)

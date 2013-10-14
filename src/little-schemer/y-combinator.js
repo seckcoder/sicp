@@ -13,6 +13,8 @@ var fib = Y(function (fib_t) {
     return function (n) {
         if (n == 0) return 0;
         if (n == 1) return 1;
-        return fib_t(n-1) + fib_t(n-2);
+        return fib(n-1) + fib(n-2);
     };
 });
+
+console.log(fib(10));
