@@ -1,10 +1,13 @@
-; the deduction of y-combinator
+; why we have y-combinator
+
+; ok, some helper function
 (define (add1 x)
   (+ x 1))
 
 (define (eternity x)
   (eternity x))
 
+; take length as example
 ; initial length definition
 (define length
   (lambda (l)
