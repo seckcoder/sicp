@@ -266,3 +266,105 @@
               (add1 (length (cdr l))))))))
 
 (Y mk-length) = length
+
+
+; try to expand it
+
+(Y mk-length)
+
+((lambda (le)
+   ((lambda (mk-length)
+      (mk-length mk-length))
+    (lambda (mk-length)
+      (le
+        (lambda (x)
+          ((mk-length mk-length) x))))))
+ (lambda (length)
+   (lambda (l)
+     (cond ((null? l) 0)
+           (else
+             (add1 (length (cdr l))))))))
+
+; expand
+((lambda (mk-length)
+   (mk-length mk-length))
+ (lambda (mk-length)
+   ((lambda (length)
+      (lambda (l)
+        (cond ((null? l) 0)
+              (else
+                (add1 (length (cdr l)))))))
+    (lambda (x)
+      ((mk-length mk-length) x)))))
+
+; expand
+
+((lambda (mk-length)
+   ((lambda (length)
+      (lambda (l)
+        (cond ((null? l) 0)
+              (else
+                (add1 (length (cdr l)))))))
+    (lambda (x)
+      ((mk-length mk-length) x))))
+ (lambda (mk-length)
+   ((lambda (length)
+      (lambda (l)
+        (cond ((null? l) 0)
+              (else
+                (add1 (length (cdr l)))))))
+    (lambda (x)
+      ((mk-length mk-length) x)))))
+
+; expand
+
+((lambda (length)
+   (lambda (l)
+     (cond ((null? l) 0)
+           (else
+             (add1 (length (cdr l)))))))
+ (lambda (x)
+   (((lambda (mk-length)
+       ((lambda (length)
+          (lambda (l)
+            (cond ((null? l) 0)
+                  (else
+                    (add1 (length (cdr l)))))))
+        (lambda (x)
+          ((mk-length mk-length) x))))
+     (lambda (mk-length)
+       ((lambda (length)
+          (lambda (l)
+            (cond ((null? l) 0)
+                  (else
+                    (add1 (length (cdr l)))))))
+        (lambda (x)
+          ((mk-length mk-length) x)))))
+    x)))
+
+; expand
+
+(lambda (l)
+  (cond ((null? l) 0)
+        (else
+          (add1 ((lambda (x)
+                   (((lambda (mk-length)
+                       ((lambda (length)
+                          (lambda (l)
+                            (cond ((null? l) 0)
+                                  (else
+                                    (add1 (length (cdr l)))))))
+                        (lambda (x)
+                          ((mk-length mk-length) x))))
+                     (lambda (mk-length)
+                       ((lambda (length)
+                          (lambda (l)
+                            (cond ((null? l) 0)
+                                  (else
+                                    (add1 (length (cdr l)))))))
+                        (lambda (x)
+                          ((mk-length mk-length) x)))))
+                    x))
+                 (cdr l))))))
+
+; that's it.
